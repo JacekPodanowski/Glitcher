@@ -90,18 +90,39 @@ Clear-Host
 Write-Host ""
 Write-Host ""
 
-$logoLine1 = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "     GLITCH INJECTOR     " + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
-$logoLine2 = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 +  [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
-$logoLine3 = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "6l17ch 7h3 fuck 0u7 0f 7h3m" + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
+# --- Centered and Aligned Logo Generation ---
+$logoText1 = "GLITCH INJECTOR"
+$logoText3 = "6l17ch 7h3 fuck 0u7 0f 7h3m"
+$maxLength = $logoText3.Length # Get the length of the longest string
+
+# Calculate padding for the first line to match the max length
+$padding1 = [math]::Max(0, ($maxLength - $logoText1.Length)) / 2
+$leftPadding1 = " " * [math]::Floor($padding1)
+$rightPadding1 = " " * [math]::Ceiling($padding1)
+$centeredText1 = $leftPadding1 + $logoText1 + $rightPadding1
+
+# Generate the middle line to match the max length
+$line2Content = [string]([char]0x2591) * $maxLength
+
+# Define borders
+$border = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591
+$reverseBorder = [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
+
+# Assemble the final logo lines
+$logoLine1 = $border + $centeredText1 + $reverseBorder
+$logoLine2 = $border + $line2Content + $reverseBorder
+$logoLine3 = $border + $logoText3 + $reverseBorder
 
 Write-Centered -Text $logoLine1 -IsLogo
 Write-Centered -Text $logoLine2 -IsLogo
 Write-Centered -Text $logoLine3 -IsLogo
+# --- End of Logo Generation ---
+
 
 Write-Host ""
 Write-Host ""
-Write-Centered -Text "> [ 1 ] Generate Payload for a REAL WEBSITE <"
-Write-Centered -Text "> [ 2 ] Generate Payload for LOCAL TESTING <"
+Write-Centered -Text "> [ 1 ] Generate Payload for REAL WEBSITE"
+Write-Centered -Text "> [ 2 ] Generate Payload for LOCAL TESTING"
 Write-Host ""
 
 $consoleWidth = try { $Host.UI.RawUI.WindowSize.Width } catch { 80 }
@@ -169,7 +190,7 @@ if ($choice -eq '2') {
     if (Test-Path $TestPage) {
         $openChoice = Read-Host "> Open '$TestPage' to view the result? (y/n)"
         if ($openChoice -eq 'y') {
-            Write-Glitchy -Text ">> Launching test environment..."
+            Write-Glitchy -Text ">> Launching ..."
             Start-Process $TestPage
         }
     }
