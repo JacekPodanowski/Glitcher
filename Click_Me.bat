@@ -1,11 +1,12 @@
 @echo off
 title GLITCH INJECTOR LAUNCHER
-echo Setting up Unicode environment...
 
-:: Set console to UTF-8
 chcp 65001 >nul
 
-:: Set PowerShell execution policy and encoding
+echo Setting up environment...
+
+cd /d "%~dp0stuff"
+
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
 "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; ^
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8; ^
