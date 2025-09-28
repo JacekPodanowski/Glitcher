@@ -2,6 +2,9 @@ $EffectLibrary = ".\glitch_effects.js"
 $OutputFile = "final_glitch_payload.js"
 $TestPage = ".\Test_page.html"
 
+$ArtgenScriptPath = Join-Path $PSScriptRoot "artgen.bat"
+$username = $env:USERNAME
+
 function Write-Glitchy {
     param(
         [string]$Text,
@@ -58,7 +61,6 @@ function Write-Glitchy {
                 Start-Sleep -Milliseconds (Get-Random -Minimum 5 -Maximum 15)
             }
         }
-
     }
     else {
         $Text.ToCharArray() | ForEach-Object {
@@ -90,36 +92,26 @@ function Write-Centered {
 }
 
 Clear-Host
-# --- Array to keep track of rows with important text ---
 $protectedRows = [System.Collections.Generic.List[int]]::new()
-
 Write-Host ""
 Write-Host ""
 
-# --- Centered and Aligned Logo Generation ---
 $logoText1 = "GLITCH INJECTOR"
 $logoText3 = "  6l17ch 7h3 fuck 0u7 0f 7h3m  "
 $maxLength = $logoText3.Length
-
 $padding1 = [math]::Max(0, ($maxLength - $logoText1.Length)) / 2
 $leftPadding1 = " " * [math]::Floor($padding1)
 $rightPadding1 = " " * [math]::Ceiling($padding1)
 $centeredText1 = $leftPadding1 + $logoText1 + $rightPadding1
-
 $line2Content = [string]([char]0x2591) * $maxLength
-
 $border = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591
 $reverseBorder = [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
-
 $logoLine1 = $border + $centeredText1 + $reverseBorder
 $logoLine2 = $border + $line2Content + $reverseBorder
 $logoLine3 = $border + $logoText3 + $reverseBorder
-
 $protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine1 -IsLogo
 $protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine2 -IsLogo
 $protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine3 -IsLogo
-# --- End of Logo Generation ---
-
 
 Write-Host ""
 Write-Host ""
@@ -127,107 +119,113 @@ $protectedRows.Add([Console]::CursorTop); Write-Centered -Text "> [ 1 ] Generate
 $protectedRows.Add([Console]::CursorTop); Write-Centered -Text "> [ 2 ] Generate Payload for LOCAL TESTING"
 Write-Host ""
 
-# --- Modified: Custom input loop with idle timer and protected rows ---
 $consoleWidth = try { $Host.UI.RawUI.WindowSize.Width } catch { 80 }
 $promptPadding = " " * [math]::Floor(($consoleWidth - 20) / 2)
 Write-Host -NoNewline "${promptPadding}Select_Mode [1-2]: "
 $promptCursorLeft = [Console]::CursorLeft
 $promptCursorTop = [Console]::CursorTop
-$protectedRows.Add($promptCursorTop) # Protect the input line
+$protectedRows.Add($promptCursorTop)
 
-# --- NEW: Updated idle message list ---
+# --- Check for artgen.bat before starting the loop
+if (-not (Test-Path $ArtgenScriptPath)) {
+    $warningMessage = "WARNING: '$ArtgenScriptPath' not found. Vandal mode visuals will not run."
+    $warningPadding = " " * [math]::Floor(($consoleWidth - $warningMessage.Length) / 2)
+    Write-Host "`n${warningPadding}$warningMessage" -ForegroundColor Yellow
+    [Console]::SetCursorPosition($promptCursorLeft, $promptCursorTop)
+}
+
 $idleMessages = @(
-    "Yo, man u dddone ? ",
-    "d0 sooomth1ng",
-    "w3o w30 w3o w30 w3o w30",
-    "-_-  -_-  -_-",
-    "sti11 wai7ing...."
+    "Yo, $username, d0 s0meth_ing",
+    "-_- -_- -_- -_- -_- -_-",
+    "hot stuff here: ", 
+    "im gett1ng sooo borr333d",
+    "i will just d0 s0me rand0m shit, ok?",
+    "w3o w3o w3o w3o w3o w3o w3o"
 )
 $idleMessageIndex = 0 
+$vandalModeActive = $false 
+$timeOfLastArtgenLaunch = [datetime]::MinValue
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 $choice = ""
-# --- MODIFIED: Timings updated to 5 seconds ---
 $idleTriggerSeconds = 5
 $postMessageDelaySeconds = 5
 $timeOfLastMessageEnd = [datetime]::MinValue
 
+# --- SIMPLIFIED AND CORRECTED INPUT LOOP ---
 while ($true) {
     if ($Host.UI.RawUI.KeyAvailable) {
         $key = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
         
-        if ($key.VirtualKeyCode -eq 'Enter' -and $choice.Length -gt 0) {
-            Write-Host ""; break
-        }
-        
-        if (($key.Character -eq '1' -or $key.Character -eq '2') -and $choice.Length -eq 0) {
+        # Only process the "key down" event to prevent double-reads
+        if (-not $key.KeyDown) { continue }
+
+        # If user presses 1 or 2, set the choice, display it, and immediately break.
+        if ($key.Character -eq '1' -or $key.Character -eq '2') {
             $choice = $key.Character
             Write-Host -NoNewline $key.Character
+            Write-Host "" # Move to the next line cleanly
+            break 
         }
         
-        if ($key.VirtualKeyCode -eq 'Backspace' -and $choice.Length -gt 0) {
-            $choice = ""
-            [Console]::SetCursorPosition($promptCursorLeft, $promptCursorTop)
-            Write-Host -NoNewline " "
-            [Console]::SetCursorPosition($promptCursorLeft, $promptCursorTop)
-        }
-        
+        # Reset the idle timer for any other key press
         $stopwatch.Restart()
         $timeOfLastMessageEnd = [datetime]::MinValue
     }
 
-    $isIdle = $stopwatch.Elapsed.TotalSeconds -gt $idleTriggerSeconds
-    $canWriteNewMessage = (Get-Date) - $timeOfLastMessageEnd | ForEach-Object { $_.TotalSeconds -gt $postMessageDelaySeconds }
-
-    if ($isIdle -and $canWriteNewMessage) {
-        $inputCursorLeft = [Console]::CursorLeft
-        $inputCursorTop = [Console]::CursorTop
-        
-        $message = $idleMessages[$idleMessageIndex]
-        $idleMessageIndex = ($idleMessageIndex + 1) % $idleMessages.Count
-        
-        $randLeft = Get-Random -Minimum 0 -Maximum ($consoleWidth - $message.Length)
-        
-        do {
-            $randTop = Get-Random -Minimum 0 -Maximum ($Host.UI.RawUI.WindowSize.Height - 1)
-        } while ($protectedRows -contains $randTop)
-
-        [Console]::SetCursorPosition($randLeft, $randTop)
-        $message.ToCharArray() | ForEach-Object {
-            Write-Host -NoNewline $_ -ForegroundColor DarkGray
-            Start-Sleep -Milliseconds (Get-Random -Minimum 50 -Maximum 150)
+    # This idle/vandal logic only runs if no valid key has been pressed yet
+    if ($vandalModeActive) {
+        $inputCursorLeft = [Console]::CursorLeft; $inputCursorTop = [Console]::CursorTop
+        do { $randTop = Get-Random -Minimum 0 -Maximum ($Host.UI.RawUI.WindowSize.Height - 1) } while ($protectedRows -contains $randTop)
+        [Console]::SetCursorPosition((Get-Random -Minimum 0 -Maximum ($consoleWidth - 4)), $randTop)
+        Write-Host -NoNewline "w3o " -ForegroundColor DarkGray
+        if (((Get-Date) - $timeOfLastArtgenLaunch).TotalSeconds -ge 3) {
+            try {
+                if (Test-Path $ArtgenScriptPath) {
+                    Start-Process -FilePath $ArtgenScriptPath -ErrorAction SilentlyContinue
+                    $timeOfLastArtgenLaunch = Get-Date
+                }
+            } catch {}
         }
-        
         [Console]::SetCursorPosition($inputCursorLeft, $inputCursorTop)
-        $timeOfLastMessageEnd = Get-Date
     }
-
+    else {
+        $isIdle = $stopwatch.Elapsed.TotalSeconds -gt $idleTriggerSeconds
+        $canWriteNewMessage = (Get-Date) - $timeOfLastMessageEnd | ForEach-Object { $_.TotalSeconds -gt $postMessageDelaySeconds }
+        if ($isIdle -and $canWriteNewMessage) {
+            $inputCursorLeft = [Console]::CursorLeft; $inputCursorTop = [Console]::CursorTop
+            $message = $idleMessages[$idleMessageIndex]
+            if ($idleMessageIndex -eq 2) {
+                try {
+                    $desktopPath = [Environment]::GetFolderPath('Desktop'); $randomFolder = Get-ChildItem -Path $desktopPath -Directory -ErrorAction SilentlyContinue | Get-Random
+                    $message += if ($null -ne $randomFolder) { "'$($randomFolder.FullName)'" } else { " your Desktop.. so clean.." }
+                } catch { $message = "i can't.. see.. anything.." }
+            }
+            do { $randTop = Get-Random -Minimum 0 -Maximum ($Host.UI.RawUI.WindowSize.Height - 1) } while ($protectedRows -contains $randTop)
+            [Console]::SetCursorPosition((Get-Random -Minimum 0 -Maximum ($consoleWidth - $message.Length)), $randTop)
+            $message.ToCharArray() | ForEach-Object { Write-Host -NoNewline $_ -ForegroundColor DarkGray; Start-Sleep -Milliseconds (Get-Random -Minimum 40 -Maximum 120) }
+            if ($idleMessageIndex -ge ($idleMessages.Count - 1)) {
+                $vandalModeActive = $true
+                $timeOfLastArtgenLaunch = Get-Date
+            }
+            else {
+                $idleMessageIndex++
+            }
+            [Console]::SetCursorPosition($inputCursorLeft, $inputCursorTop); $timeOfLastMessageEnd = Get-Date
+        }
+    }
+    
     Start-Sleep -Milliseconds 50
 }
-# --- End of custom input loop ---
 
-
+# (The rest of the script remains unchanged)
 switch ($choice) {
-    '1' {
-        Write-Host ""
-        Write-Glitchy -Text ">> MODE: REAL SITE PAYLOAD"
-    }
-    '2' {
-        Write-Host ""
-        Write-Glitchy -Text ">> MODE: LOCAL TESTING"
-    }
-    default {
-        Write-Host ""
-        Write-Glitchy -Text ">> ERROR: INVALID_SELECTION"
-        Write-Centered -Text "> SCRIPT TERMINATED <"
-        exit 1
-    }
+    '1' { Write-Host ""; Write-Glitchy -Text ">> MODE: REAL SITE PAYLOAD" }
+    '2' { Write-Host ""; Write-Glitchy -Text ">> MODE: LOCAL TESTING" }
+    default { Write-Host ""; Write-Glitchy -Text ">> ERROR: INVALID_SELECTION"; Write-Centered -Text "> SCRIPT TERMINATED <"; exit 1 }
 }
 
 if (-not (Test-Path $EffectLibrary)) {
-    Write-Glitchy -Text "[[ FATAL ERROR ]]"
-    Write-Glitchy -Text "Core library '$EffectLibrary' not found. Cannot proceed."
-    Write-Centered -Text "> SCRIPT TERMINATED <"
-    exit 1
+    Write-Glitchy -Text "[[ FATAL ERROR ]]"; Write-Glitchy -Text "Core library '$EffectLibrary' not found."; Write-Centered -Text "> SCRIPT TERMINATED <"; exit 1
 }
 Write-Glitchy -Text ">> Core library found. Assembling payload..."
 
@@ -241,7 +239,6 @@ window.GlitchArt.run([
 document.body.addEventListener('click', function() { if (Math.random() < 0.20) window.GlitchArt.datamosh(); });
 setInterval(function() { if (Math.random() < 0.05) window.GlitchArt.datamosh(); }, 5000);
 "@
-
 $libraryContent = Get-Content -Path $EffectLibrary -Raw
 $finalPayload = $libraryContent + "`r`n`r`n" + $initializerCode
 $finalPayload | Out-File -FilePath $OutputFile -Encoding UTF8
@@ -253,7 +250,6 @@ $completeLine = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "   
 Write-Centered -Text $completeLine -IsLogo
 
 Write-Host ""
-
 if ($choice -eq '1') {
     Write-Glitchy -Text "[[ HOW TO USE ON A REAL WEBSITE ]]"
     Write-Centered -Text "> 1. Open '$OutputFile' and copy its entire content."
@@ -262,19 +258,13 @@ if ($choice -eq '1') {
     Write-Centered -Text "> 4. Go to the 'Console' tab."
     Write-Centered -Text "> 5. Paste the code into the console and press Enter."
 }
-
 if ($choice -eq '2') {
-    if (Test-Path $TestPage) {
+    if (Test-path $TestPage) {
         $openChoice = Read-Host "> Open '$TestPage' to view the result? (y/n)"
-        if ($openChoice -eq 'y') {
-            Write-Glitchy -Text ">> Launching ..."
-            Start-Process $TestPage
-        }
-    }
-    else {
+        if ($openChoice -eq 'y') { Write-Glitchy -Text ">> Launching ..."; Start-Process $TestPage }
+    } else {
         Write-Glitchy -Text ">> NOTICE: Your test page '$TestPage' was not found."
         Write-Centered -Text "> The payload '$OutputFile' was still created successfully."
     }
 }
-
 Write-Host ""
