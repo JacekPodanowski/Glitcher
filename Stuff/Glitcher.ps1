@@ -9,65 +9,47 @@ function Write-Glitchy {
         [switch]$IsLogo
     )
     
-    # Get the console width dynamically, with a fallback for safety
     $consoleWidth = try { $Host.UI.RawUI.WindowSize.Width } catch { 80 }
 
     if ($IsLogo) {
-        # --- NEW: Updated color palette to include Black ---
-        $glitchColors = @('Black', 'DarkGray', 'Gray')
-
+        $glitchColors = @('DarkGray')
+        
         $Text.ToCharArray() | ForEach-Object {
             $char = $_
             
-            # Randomly trigger a glitch effect for a character
-            if ((Get-Random -Minimum 1 -Maximum 100) -le 25) {
+            if ((Get-Random -Minimum 1 -Maximum 100) -le 7) {
                 $glitchLines = Get-Random -Minimum 2 -Maximum 5
-                $glitchPositions = @() # Store where glitches are drawn to ensure they are cleaned up
 
-                # --- STAGE 1: DRAW GLITCH ARTIFACTS ---
                 for ($i = 0; $i -lt $glitchLines; $i++) {
                     $currentPos = [Console]::CursorTop
                     $currentLeft = [Console]::CursorLeft
                     
                     $glitchLeft = Get-Random -Minimum 0 -Maximum $consoleWidth
-                    $glitchTop = $currentPos + (Get-Random -Minimum 1 -Maximum 6)
+                    $glitchTop = $currentPos + (Get-Random -Minimum 4 -Maximum 12)
                     [Console]::SetCursorPosition($glitchLeft, $glitchTop)
-                    
-                    $glitchPositions += $glitchTop
-                    
-                    # --- NEW: A single color is chosen for the entire burst ---
-                    $burstColor = Get-Random $glitchColors
-                    
-                    # --- NEW: Burst length is now 4 to 10 characters ---
-                    $burstLength = Get-Random -Minimum 4 -Maximum 10
-                    $glitchChars = @('#', '@', '%', '&', '*', '+', '=', '-', '_', '~', '|', '\', '/')
-                    for ($j = 0; $j -lt $burstLength; $j++) {
-                        $glitchChar = Get-Random $glitchChars
-                        # All characters in the burst use the same color
-                        Write-Host -NoNewline $glitchChar -ForegroundColor $burstColor
+                                        
+                    if ((Get-Random -Minimum 1 -Maximum 2) -eq 1) {
+                        $burstColor = Get-Random $glitchColors
+                        $burstLength = Get-Random -Minimum 4 -Maximum 10
+                        $glitchChars = @('#', '@', '%', '&', '*', '+', '=', '-', '_', '~', '|', '\', '/')
+                        for ($j = 0; $j -lt $burstLength; $j++) {
+                            $glitchChar = Get-Random $glitchChars
+                            Write-Host -NoNewline $glitchChar -ForegroundColor $burstColor
+                        }
+                    }
+                    else {
+                        $burstLength = Get-Random -Minimum 6 -Maximum 12
+                        for ($j = 0; $j -lt $burstLength; $j++) {
+                            Write-Host -NoNewline " "
+                        }
                     }
                     
-                    # Restore cursor to original position
                     [Console]::SetCursorPosition($currentLeft, $currentPos)
                 }
                 
-                # Pause briefly to make the glitch visible
                 Start-Sleep -Milliseconds (Get-Random -Minimum 40 -Maximum 80)
-                
-                # --- STAGE 2: CLEAR GLITCH ARTIFACTS ---
-                $uniquePositions = $glitchPositions | Sort-Object -Unique
-                foreach ($pos in $uniquePositions) {
-                    $currentPos = [Console]::CursorTop
-                    $currentLeft = [Console]::CursorLeft
-                    
-                    [Console]::SetCursorPosition(0, $pos)
-                    Write-Host -NoNewline (" " * $consoleWidth)
-                    
-                    [Console]::SetCursorPosition($currentLeft, $currentPos)
-                }
             }
             
-            # Write the actual character of the text after the glitch effect
             if ($char -eq ' ') {
                 Write-Host -NoNewline $char
             }
@@ -76,17 +58,12 @@ function Write-Glitchy {
                 Start-Sleep -Milliseconds (Get-Random -Minimum 5 -Maximum 15)
             }
         }
+
     }
     else {
-        # Standard, non-glitchy text writing
         $Text.ToCharArray() | ForEach-Object {
-            if ($_ -eq ' ') {
-                Write-Host -NoNewline $_
-            }
-            else {
-                Write-Host -NoNewline $_
-                Start-Sleep -Milliseconds (Get-Random -Minimum 2 -Maximum 8)
-            }
+            Write-Host -NoNewline $_
+            Start-Sleep -Milliseconds (Get-Random -Minimum 2 -Maximum 8)
         }
     }
     
@@ -113,6 +90,9 @@ function Write-Centered {
 }
 
 Clear-Host
+# --- Array to keep track of rows with important text ---
+$protectedRows = [System.Collections.Generic.List[int]]::new()
+
 Write-Host ""
 Write-Host ""
 
@@ -133,24 +113,98 @@ $reverseBorder = [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
 
 $logoLine1 = $border + $centeredText1 + $reverseBorder
 $logoLine2 = $border + $line2Content + $reverseBorder
-# --- FIX: Removed the extra leading space to correct the alignment ---
 $logoLine3 = $border + $logoText3 + $reverseBorder
 
-Write-Centered -Text $logoLine1 -IsLogo
-Write-Centered -Text $logoLine2 -IsLogo
-Write-Centered -Text $logoLine3 -IsLogo
+$protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine1 -IsLogo
+$protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine2 -IsLogo
+$protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine3 -IsLogo
 # --- End of Logo Generation ---
 
 
 Write-Host ""
 Write-Host ""
-Write-Centered -Text "> [ 1 ] Generate Payload for REAL WEBSITE"
-Write-Centered -Text "> [ 2 ] Generate Payload for LOCAL TESTING"
+$protectedRows.Add([Console]::CursorTop); Write-Centered -Text "> [ 1 ] Generate Payload for REAL WEBSITE"
+$protectedRows.Add([Console]::CursorTop); Write-Centered -Text "> [ 2 ] Generate Payload for LOCAL TESTING"
 Write-Host ""
 
+# --- Modified: Custom input loop with idle timer and protected rows ---
 $consoleWidth = try { $Host.UI.RawUI.WindowSize.Width } catch { 80 }
 $promptPadding = " " * [math]::Floor(($consoleWidth - 20) / 2)
-$choice = Read-Host "${promptPadding}Select_Mode [1-2]"
+Write-Host -NoNewline "${promptPadding}Select_Mode [1-2]: "
+$promptCursorLeft = [Console]::CursorLeft
+$promptCursorTop = [Console]::CursorTop
+$protectedRows.Add($promptCursorTop) # Protect the input line
+
+# --- NEW: Updated idle message list ---
+$idleMessages = @(
+    "Yo, man u dddone ? ",
+    "d0 sooomth1ng",
+    "w3o w30 w3o w30 w3o w30",
+    "-_-  -_-  -_-",
+    "sti11 wai7ing...."
+)
+$idleMessageIndex = 0 
+$stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+$choice = ""
+# --- MODIFIED: Timings updated to 5 seconds ---
+$idleTriggerSeconds = 5
+$postMessageDelaySeconds = 5
+$timeOfLastMessageEnd = [datetime]::MinValue
+
+while ($true) {
+    if ($Host.UI.RawUI.KeyAvailable) {
+        $key = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+        
+        if ($key.VirtualKeyCode -eq 'Enter' -and $choice.Length -gt 0) {
+            Write-Host ""; break
+        }
+        
+        if (($key.Character -eq '1' -or $key.Character -eq '2') -and $choice.Length -eq 0) {
+            $choice = $key.Character
+            Write-Host -NoNewline $key.Character
+        }
+        
+        if ($key.VirtualKeyCode -eq 'Backspace' -and $choice.Length -gt 0) {
+            $choice = ""
+            [Console]::SetCursorPosition($promptCursorLeft, $promptCursorTop)
+            Write-Host -NoNewline " "
+            [Console]::SetCursorPosition($promptCursorLeft, $promptCursorTop)
+        }
+        
+        $stopwatch.Restart()
+        $timeOfLastMessageEnd = [datetime]::MinValue
+    }
+
+    $isIdle = $stopwatch.Elapsed.TotalSeconds -gt $idleTriggerSeconds
+    $canWriteNewMessage = (Get-Date) - $timeOfLastMessageEnd | ForEach-Object { $_.TotalSeconds -gt $postMessageDelaySeconds }
+
+    if ($isIdle -and $canWriteNewMessage) {
+        $inputCursorLeft = [Console]::CursorLeft
+        $inputCursorTop = [Console]::CursorTop
+        
+        $message = $idleMessages[$idleMessageIndex]
+        $idleMessageIndex = ($idleMessageIndex + 1) % $idleMessages.Count
+        
+        $randLeft = Get-Random -Minimum 0 -Maximum ($consoleWidth - $message.Length)
+        
+        do {
+            $randTop = Get-Random -Minimum 0 -Maximum ($Host.UI.RawUI.WindowSize.Height - 1)
+        } while ($protectedRows -contains $randTop)
+
+        [Console]::SetCursorPosition($randLeft, $randTop)
+        $message.ToCharArray() | ForEach-Object {
+            Write-Host -NoNewline $_ -ForegroundColor DarkGray
+            Start-Sleep -Milliseconds (Get-Random -Minimum 50 -Maximum 150)
+        }
+        
+        [Console]::SetCursorPosition($inputCursorLeft, $inputCursorTop)
+        $timeOfLastMessageEnd = Get-Date
+    }
+
+    Start-Sleep -Milliseconds 50
+}
+# --- End of custom input loop ---
+
 
 switch ($choice) {
     '1' {
