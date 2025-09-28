@@ -4,10 +4,10 @@ setlocal enabledelayedexpansion
 REM ####################################################################
 REM ##                                                                ##
 REM ##           "Final Masterpiece" Glitch Art Performance           ##
-REM ##                     --- v11.0 REALISTIC ---                    ##
+REM ##                     --- v13.0 BORDER FOCUSED ---               ##
 REM ##                                                                ##
-REM ##   NEW: Realistic hex dumps, memory addresses, glitchy overlays ##
-REM ##   and authentic error messages that dissolve into chaos.       ##
+REM ##   NEW: Squares prefer border positions but occasionally drift  ##
+REM ##   toward center, creating more realistic crash behavior.       ##
 REM ##                                                                ##
 REM ##          CLOSE THE WINDOW TO EXIT THE INFINITE LOOP.           ##
 REM ##                                                                ##
@@ -34,10 +34,6 @@ REM ### PHASE 1: FAKE INITIALIZATION (Duration: ~10-15s) ###
 REM ####################################################
 cls
 title System Initializing
-echo System Integrity Check... OK
-ping localhost -n 2 > nul
-echo Connecting to update server... OK
-ping localhost -n 2 > nul
 for /l %%i in (1,1,7) do (
     echo Downloading segment [%%i/7]...
     set /a "delay = !random! * 900 / 32768 + 100"
@@ -55,12 +51,46 @@ cls
 title General protection fault
 set /a "crash_line_y=1"
 
-REM --- Create 2-4 permanent squares with base positions ---
+REM --- Create 2-4 permanent squares with BORDER-BIASED positions ---
 set /a "num_blocks = !random! %% 3 + 2"
 for /l %%b in (1,1,!num_blocks!) do (
-    set /a "block%%b_base_x = !random! * 60 / 32768 + 5"
-    set /a "block%%b_base_y = !random! * 15 / 32768 + 2"
+    REM --- 70% chance to spawn near borders, 30% chance for center area ---
+    set /a "spawn_type = !random! * 100 / 32768"
+    
+    if !spawn_type! LSS 70 (
+        REM --- Border spawn logic ---
+        set /a "border_choice = !random! * 4 / 32768"
+        if !border_choice! EQU 0 (
+            REM --- Left border (x: -10 to 15) ---
+            set /a "block%%b_base_x = !random! * 25 / 32768 - 10"
+            set /a "block%%b_base_y = !random! * 20 / 32768 + 1"
+        ) else if !border_choice! EQU 1 (
+            REM --- Right border (x: 60 to 85) ---
+            set /a "block%%b_base_x = !random! * 25 / 32768 + 60"
+            set /a "block%%b_base_y = !random! * 20 / 32768 + 1"
+        ) else if !border_choice! EQU 2 (
+            REM --- Top border (y: -3 to 5) ---
+            set /a "block%%b_base_x = !random! * 60 / 32768 + 5"
+            set /a "block%%b_base_y = !random! * 8 / 32768 - 3"
+        ) else (
+            REM --- Bottom border (y: 18 to 27) ---
+            set /a "block%%b_base_x = !random! * 60 / 32768 + 5"
+            set /a "block%%b_base_y = !random! * 9 / 32768 + 18"
+        )
+    ) else (
+        REM --- Center area spawn (30% chance) ---
+        set /a "block%%b_base_x = !random! * 40 / 32768 + 20"
+        set /a "block%%b_base_y = !random! * 12 / 32768 + 6"
+    )
+    
     set /a "block%%b_size = 35 + !random! %% 25"
+    
+    REM --- Set movement tendency: border squares tend to move toward center ---
+    if !spawn_type! LSS 70 (
+        set "block%%b_tendency=center"
+    ) else (
+        set "block%%b_tendency=border"
+    )
 )
 
 REM --- Short crash intro ---
@@ -95,11 +125,47 @@ set /a "full_error_timer=0"
 set "full_error_active=0"
 
 :infinite_chaos_loop
-    REM --- Random freeze chance ---
+    REM --- More frequent freeze chance (15% chance for 1-10 second freeze) ---
     set /a "freeze_chance = !random! * 100 / 32768"
-    if !freeze_chance! LSS 5 (
-        set /a "freeze_time = !random! * 5 / 32768 + 1"
+    if !freeze_chance! LSS 15 (
+        set /a "freeze_time = !random! * 10 / 32768 + 1"
         ping localhost -n !freeze_time! > nul
+        
+        REM --- 20% chance during freeze to spawn displaced restart process ---
+        set /a "restart_chance = !random! * 100 / 32768"
+        if !restart_chance! LSS 20 (
+            REM --- Calculate random displacement ---
+            set /a "disp_x = !random! * 30 / 32768 + 5"
+            set /a "disp_y = !random! * 15 / 32768 + 2"
+            
+            REM --- Spawn displaced downloading process ---
+            echo %ESC%[!disp_y!;!disp_x!HDownloading segment [1/7]...
+            ping localhost -n 1 -w 300 > nul
+            set /a "disp_y = !disp_y! + 1"
+            if !disp_y! LEQ %height% echo %ESC%[!disp_y!;!disp_x!HDownloading segment [2/7]...
+            ping localhost -n 1 -w 250 > nul
+            set /a "disp_y = !disp_y! + 1"
+            if !disp_y! LEQ %height% echo %ESC%[!disp_y!;!disp_x!HDownloading segment [3/7]...
+            ping localhost -n 1 -w 200 > nul
+            set /a "disp_y = !disp_y! + 1"
+            if !disp_y! LEQ %height% echo %ESC%[!disp_y!;!disp_x!HDownloading segment [4/7]...
+            ping localhost -n 1 -w 150 > nul
+            set /a "disp_y = !disp_y! + 1"
+            if !disp_y! LEQ %height% echo %ESC%[!disp_y!;!disp_x!HDownloading segment [5/7]...
+            ping localhost -n 1 -w 100 > nul
+            set /a "disp_y = !disp_y! + 1"
+            if !disp_y! LEQ %height% echo %ESC%[!disp_y!;!disp_x!HDownloading segment [6/7]...
+            ping localhost -n 1 -w 100 > nul
+            set /a "disp_y = !disp_y! + 1"
+            if !disp_y! LEQ %height% echo %ESC%[!disp_y!;!disp_x!HDownloading segment [7/7]...
+            ping localhost -n 1 -w 100 > nul
+            set /a "disp_y = !disp_y! + 1"
+            if !disp_y! LEQ %height% echo %ESC%[!disp_y!;!disp_x!HAll segments downloaded.
+            ping localhost -n 1 -w 200 > nul
+            set /a "disp_y = !disp_y! + 1"
+            if !disp_y! LEQ %height% echo %ESC%[!disp_y!;!disp_x!HLoading core modules...
+            ping localhost -n 2 > nul
+        )
     )
 
     REM --- ERASE old squares ---
@@ -182,7 +248,7 @@ set "full_error_active=0"
                 set "screen_line_0=!before_overlay!%ESC%[30;47m!overlay_text!%ESC%[0m %ESC%[30;47m!overlay_text!%ESC%[0m"
                 REM --- 10% chance for triple stack ---
                 set /a "triple_chance = !random! * 100 / 32768"
-                if !triple_chance! LSS 15 (
+                if !triple_chance! LSS 10 (
                     set "screen_line_0=!screen_line_0! %ESC%[30;47m!overlay_text!%ESC%[0m"
                 )
             ) else (
@@ -191,18 +257,30 @@ set "full_error_active=0"
         )
     )
 
-    REM --- Occasionally display full error message at bottom ---
+    REM --- More frequent full error messages at bottom ---
     set /a "full_error_timer = !full_error_timer! + 1"
-    if !full_error_timer! GTR 80 (
+    if !full_error_timer! GTR 50 (
         if !full_error_active! EQU 0 (
             set "full_error_active=1"
             set /a "full_error_timer=0"
-            echo %ESC%[23;1H%ESC%[41;37m EXCEPTION: Access violation reading location 0x00000000               %ESC%[0m
-            echo %ESC%[24;1H%ESC%[41;37m The instruction at 0x7FF123456789 referenced memory at 0x00000000    %ESC%[0m
-            echo %ESC%[25;1H%ESC%[41;37m The memory could not be read. Click OK to terminate the application.  %ESC%[0m
+            REM --- Randomize error message type ---
+            set /a "error_type = !random! * 3 / 32768"
+            if !error_type! EQU 0 (
+                echo %ESC%[23;1H%ESC%[41;37m EXCEPTION: Access violation reading location 0x00000000               %ESC%[0m
+                echo %ESC%[24;1H%ESC%[41;37m The instruction at 0x7FF123456789 referenced memory at 0x00000000    %ESC%[0m
+                echo %ESC%[25;1H%ESC%[41;37m The memory could not be read. Click OK to terminate the application.  %ESC%[0m
+            ) else if !error_type! EQU 1 (
+                echo %ESC%[23;1H%ESC%[41;37m FATAL ERROR: Stack buffer overflow detected                            %ESC%[0m
+                echo %ESC%[24;1H%ESC%[41;37m Program: C:\Windows\System32\svchost.exe                             %ESC%[0m
+                echo %ESC%[25;1H%ESC%[41;37m A buffer overrun has been detected which has corrupted the stack.     %ESC%[0m
+            ) else (
+                echo %ESC%[23;1H%ESC%[41;37m KERNEL PANIC: Unable to handle kernel paging request                  %ESC%[0m
+                echo %ESC%[24;1H%ESC%[41;37m at virtual address 0xc0000000                                        %ESC%[0m
+                echo %ESC%[25;1H%ESC%[41;37m Oops: 0002 [1] PREEMPT SMP                                           %ESC%[0m
+            )
         )
     )
-    if !full_error_timer! GTR 25 if !full_error_active! EQU 1 (
+    if !full_error_timer! GTR 20 if !full_error_active! EQU 1 (
         set "full_error_active=0"
         set /a "full_error_timer=0"
         REM --- Clear the error message area ---
@@ -211,22 +289,51 @@ set "full_error_active=0"
         echo %ESC%[25;1H                                                                                
     )
 
-    REM --- Calculate NEW positions for squares ---
+    REM --- Calculate NEW positions for squares with BIAS TOWARD MOVEMENT ---
     for /l %%b in (1,1,!num_blocks!) do (
+        REM --- Strong shake effect ---
         set /a "shake_x = !random! %% 11 - 5"
         set /a "shake_y = !random! %% 7 - 3"
         
+        REM --- Biased drift based on tendency ---
         set /a "drift_chance = !random! %% 100"
-        if !drift_chance! LSS 10 (
-            set /a "drift_x = !random! %% 7 - 3"
-            set /a "drift_y = !random! %% 5 - 2"
+        if !drift_chance! LSS 15 (
+            call set "tendency=%%block%%b_tendency%%"
+            if "!tendency!"=="center" (
+                REM --- Border squares drift toward center (40x12 area) ---
+                set /a "center_x = 40"
+                set /a "center_y = 12"
+                set /a "current_x = !block%%b_base_x!"
+                set /a "current_y = !block%%b_base_y!"
+                
+                if !current_x! LSS !center_x! ( set /a "drift_x = 1 + !random! %% 3" ) else ( set /a "drift_x = -1 - !random! %% 3" )
+                if !current_y! LSS !center_y! ( set /a "drift_y = 1 + !random! %% 2" ) else ( set /a "drift_y = -1 - !random! %% 2" )
+                
+                REM --- 25% chance to switch tendency to border ---
+                set /a "switch_chance = !random! * 100 / 32768"
+                if !switch_chance! LSS 25 set "block%%b_tendency=border"
+                
+            ) else (
+                REM --- Center squares drift toward borders ---
+                set /a "border_choice = !random! * 4 / 32768"
+                if !border_choice! EQU 0 ( set /a "drift_x = -2 - !random! %% 3" )
+                if !border_choice! EQU 1 ( set /a "drift_x = 2 + !random! %% 3" )
+                if !border_choice! EQU 2 ( set /a "drift_y = -1 - !random! %% 2" )
+                if !border_choice! EQU 3 ( set /a "drift_y = 1 + !random! %% 2" )
+                
+                REM --- 20% chance to switch tendency to center ---
+                set /a "switch_chance = !random! * 100 / 32768"
+                if !switch_chance! LSS 20 set "block%%b_tendency=center"
+            )
+            
             set /a "block%%b_base_x = !block%%b_base_x! + !drift_x!"
             set /a "block%%b_base_y = !block%%b_base_y! + !drift_y!"
             
-            if !block%%b_base_x! LSS -15 set /a "block%%b_base_x = 70"
-            if !block%%b_base_x! GTR 85 set /a "block%%b_base_x = -10"
-            if !block%%b_base_y! LSS -3 set /a "block%%b_base_y = 20"
-            if !block%%b_base_y! GTR 25 set /a "block%%b_base_y = -2"
+            REM --- Allow extensive off-screen positioning ---
+            if !block%%b_base_x! LSS -25 set /a "block%%b_base_x = 90"
+            if !block%%b_base_x! GTR 95 set /a "block%%b_base_x = -20"
+            if !block%%b_base_y! LSS -5 set /a "block%%b_base_y = 28"
+            if !block%%b_base_y! GTR 30 set /a "block%%b_base_y = -4"
         )
         
         set /a "block%%b_current_x = !block%%b_base_x! + !shake_x!"
@@ -249,7 +356,7 @@ set "full_error_active=0"
                 set /a "line_width = !block%%b_size! - !right_reduce!"
                 set /a "actual_x = !block%%b_current_x! + !left_indent!"
                 
-                if !actual_x! GTR -20 if !actual_x! LSS 100 (
+                if !actual_x! GTR -30 if !actual_x! LSS 110 (
                     set "draw_str="
                     for /l %%i in (1,1,!line_width!) do set "draw_str=!draw_str! "
                     echo %ESC%[%%y;!actual_x!H%ESC%[47m!draw_str!%ESC%[0m
