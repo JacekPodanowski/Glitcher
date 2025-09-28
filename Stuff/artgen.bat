@@ -4,11 +4,10 @@ setlocal enabledelayedexpansion
 REM ####################################################################
 REM ##                                                                ##
 REM ##           "Final Masterpiece" Glitch Art Performance           ##
-REM ##                     --- v10.0 ULTIMATE ---                     ##
+REM ##                     --- v11.0 REALISTIC ---                    ##
 REM ##                                                                ##
-REM ##   NEW FEATURES: Bigger rough squares that never disappear,     ##
-REM ##   infinite shaking, partial off-screen flight, chaotic logs,   ##
-REM ##   and random freezes during chaos phase for realism.           ##
+REM ##   NEW: Realistic hex dumps, memory addresses, glitchy overlays ##
+REM ##   and authentic error messages that dissolve into chaos.       ##
 REM ##                                                                ##
 REM ##          CLOSE THE WINDOW TO EXIT THE INFINITE LOOP.           ##
 REM ##                                                                ##
@@ -20,9 +19,15 @@ for /f %%a in ('echo prompt $E^| cmd') do set "ESC=%%a"
 set /a "width=80"
 set /a "height=25"
 
-REM --- Create the Curated "Table" of Error Messages ---
-set "error_table=Access is denied;Object reference not set;undefined is not a function;Segmentation fault;Null pointer exception;Access violation;Index out of bounds;Unresolved external symbol;Stack overflow;Invalid memory reference;process terminated;FATAL_ERROR;wtf is this;downloading core;memory corruption;buffer overflow;illegal instruction;bus error;core dumped"
-set /a "error_count=19"
+REM --- Memory section names and error overlays ---
+set "memory_sections=HEAP;STACK;CODE;DATA;KERNEL;USER;DRIVER;SYSTEM;MODULE;BUFFER"
+set "overlay_errors=Access violation;Null pointer;Stack corruption;Buffer overflow;Heap corruption;Invalid handle;Permission denied;Resource leak;Deadlock detected"
+set /a "section_count=10"
+set /a "overlay_count=9"
+
+REM --- Base memory address (will increment) ---
+set /a "base_addr_high=0x40000000"
+set /a "base_addr_low=0x1000"
 
 REM ####################################################
 REM ### PHASE 1: FAKE INITIALIZATION (Duration: ~10-15s) ###
@@ -67,17 +72,17 @@ for /l %%t in (1,1,30) do (
 )
 
 REM #########################################################
-REM ### PHASE 3: INFINITE CHAOS WITH PERSISTENT SQUARES ###
+REM ### PHASE 3: INFINITE CHAOS WITH REALISTIC HEX DUMPS ###
 REM #########################################################
 cls
 title Unresolved external symbol
 
-REM --- Initialize the screen buffer for logs ---
+REM --- Initialize the screen buffer for hex dumps ---
 set "empty_line="
-for /l %%i in (1,1,%width%) do set "empty_line=!empty_line! "
+for /l %%i in (1,1,60) do set "empty_line=!empty_line! "
 for /l %%i in (0,1,%height%) do set "screen_line_%%i=!empty_line!"
 
-REM --- Initialize square strings to prevent errors ---
+REM --- Initialize square strings ---
 for /l %%b in (1,1,!num_blocks!) do (
     set "block%%b_str="
     for /l %%i in (1,1,!block%%b_size!) do set "block%%b_str=!block%%b_str! "
@@ -85,8 +90,12 @@ for /l %%b in (1,1,!num_blocks!) do (
     set "block%%b_current_y=!block%%b_base_y!"
 )
 
+REM --- Full error message display timer ---
+set /a "full_error_timer=0"
+set "full_error_active=0"
+
 :infinite_chaos_loop
-    REM --- Random freeze chance (5% chance for 1-5 second freeze) ---
+    REM --- Random freeze chance ---
     set /a "freeze_chance = !random! * 100 / 32768"
     if !freeze_chance! LSS 5 (
         set /a "freeze_time = !random! * 5 / 32768 + 1"
@@ -96,19 +105,16 @@ for /l %%b in (1,1,!num_blocks!) do (
     REM --- ERASE old squares ---
     for /l %%b in (1,1,!num_blocks!) do (
         if defined block%%b_current_y (
-            REM --- Create rough edges by varying the square height ---
             set /a "square_height = 8 + !random! %% 6"
             set /a "end_y = !block%%b_current_y! + !square_height!"
             if !end_y! GTR %height% set /a "end_y = %height%"
             
             for /l %%y in (!block%%b_current_y!,1,!end_y!) do (
-                REM --- Make rough left and right edges ---
                 set /a "left_indent = !random! %% 3"
                 set /a "right_reduce = !random! %% 4"
                 set /a "line_width = !block%%b_size! - !right_reduce!"
                 set /a "actual_x = !block%%b_current_x! + !left_indent!"
                 
-                REM --- Erase with spaces ---
                 set "erase_str="
                 for /l %%i in (1,1,!line_width!) do set "erase_str=!erase_str! "
                 echo %ESC%[%%y;!actual_x!H!erase_str!
@@ -116,7 +122,7 @@ for /l %%b in (1,1,!num_blocks!) do (
         )
     )
 
-    REM --- Scroll and update the log buffer ---
+    REM --- Scroll hex dump buffer ---
     for /l %%i in (%height%,-1,1) do (
         set /a "prev_line_index = %%i - 1"
         if !prev_line_index! GEQ 0 (
@@ -126,38 +132,90 @@ for /l %%b in (1,1,!num_blocks!) do (
     )
     set "screen_line_0=!empty_line!"
 
-    REM --- 30% chance to add new error message ---
-    set /a "error_chance = !random! * 100 / 32768"
-    if !error_chance! LSS 30 (
-        set /a "text_index = !random! * %error_count% / 32768"
-        set "temp_errors=!error_table!"
-        for /l %%i in (1,1,!text_index!) do (
-            for /f "tokens=1* delims=;" %%a in ("!temp_errors!") do set "temp_errors=%%b"
-        )
-        for /f "tokens=1* delims=;" %%a in ("!temp_errors!") do set "error_text=%%a"
-        
-        set /a "rand_x = !random! * 35 / 32768 + 15"
-        set /a "style_chance = !random! * 100 / 32768"
-        if !style_chance! LSS 25 (
-            set "error_string=%ESC%[30;47m!error_text!%ESC%[0m"
-        ) else (
-            set "error_string=%ESC%[37;40m!error_text!%ESC%[0m"
+    REM --- Generate realistic hex dump line ---
+    set /a "hex_chance = !random! * 100 / 32768"
+    if !hex_chance! LSS 60 (
+        REM --- Generate memory address ---
+        set /a "base_addr_low = !base_addr_low! + !random! * 32 / 32768 + 16"
+        if !base_addr_low! GTR 0xFFFF (
+            set /a "base_addr_high = !base_addr_high! + 0x1000"
+            set /a "base_addr_low = !base_addr_low! - 0x10000"
         )
         
-        set "line=!screen_line_0!"
-        if !rand_x! LSS 75 (
-            call set "before=%%line:~0,!rand_x!%%"
-            set "screen_line_0=!before!!error_string!"
+        REM --- Get random memory section ---
+        set /a "section_idx = !random! * %section_count% / 32768"
+        set "temp_sections=!memory_sections!"
+        for /l %%i in (1,1,!section_idx!) do (
+            for /f "tokens=1* delims=;" %%a in ("!temp_sections!") do set "temp_sections=%%b"
+        )
+        for /f "tokens=1* delims=;" %%a in ("!temp_sections!") do set "section_name=%%a"
+        
+        REM --- Generate hex data ---
+        set "hex_data="
+        for /l %%i in (1,1,8) do (
+            set /a "hex_val = !random! * 256 / 32768"
+            if !hex_val! LSS 16 ( set "hex_byte=0!hex_val!" ) else ( set "hex_byte=!hex_val!" )
+            set "hex_data=!hex_data! !hex_byte!"
+        )
+        
+        REM --- Create memory dump line ---
+        set "memory_line=!section_name! 0x!base_addr_high!!base_addr_low! !hex_data!"
+        set "screen_line_0=!memory_line!"
+        
+        REM --- 20% chance for error overlay on this line ---
+        set /a "overlay_chance = !random! * 100 / 32768"
+        if !overlay_chance! LSS 20 (
+            set /a "overlay_idx = !random! * %overlay_count% / 32768"
+            set "temp_overlays=!overlay_errors!"
+            for /l %%i in (1,1,!overlay_idx!) do (
+                for /f "tokens=1* delims=;" %%a in ("!temp_overlays!") do set "temp_overlays=%%b"
+            )
+            for /f "tokens=1* delims=;" %%a in ("!temp_overlays!") do set "overlay_text=%%a"
+            
+            REM --- Random position for overlay ---
+            set /a "overlay_pos = !random! * 25 / 32768 + 20"
+            call set "before_overlay=%%screen_line_0:~0,!overlay_pos!%%"
+            
+            REM --- 30% chance for stacked overlays (2-3 times) ---
+            set /a "stack_chance = !random! * 100 / 32768"
+            if !stack_chance! LSS 30 (
+                set "screen_line_0=!before_overlay!%ESC%[30;47m!overlay_text!%ESC%[0m %ESC%[30;47m!overlay_text!%ESC%[0m"
+                REM --- 10% chance for triple stack ---
+                set /a "triple_chance = !random! * 100 / 32768"
+                if !triple_chance! LSS 15 (
+                    set "screen_line_0=!screen_line_0! %ESC%[30;47m!overlay_text!%ESC%[0m"
+                )
+            ) else (
+                set "screen_line_0=!before_overlay!%ESC%[30;47m!overlay_text!%ESC%[0m"
+            )
         )
     )
 
-    REM --- Calculate NEW positions for squares (with shake and drift) ---
+    REM --- Occasionally display full error message at bottom ---
+    set /a "full_error_timer = !full_error_timer! + 1"
+    if !full_error_timer! GTR 80 (
+        if !full_error_active! EQU 0 (
+            set "full_error_active=1"
+            set /a "full_error_timer=0"
+            echo %ESC%[23;1H%ESC%[41;37m EXCEPTION: Access violation reading location 0x00000000               %ESC%[0m
+            echo %ESC%[24;1H%ESC%[41;37m The instruction at 0x7FF123456789 referenced memory at 0x00000000    %ESC%[0m
+            echo %ESC%[25;1H%ESC%[41;37m The memory could not be read. Click OK to terminate the application.  %ESC%[0m
+        )
+    )
+    if !full_error_timer! GTR 25 if !full_error_active! EQU 1 (
+        set "full_error_active=0"
+        set /a "full_error_timer=0"
+        REM --- Clear the error message area ---
+        echo %ESC%[23;1H                                                                                
+        echo %ESC%[24;1H                                                                                
+        echo %ESC%[25;1H                                                                                
+    )
+
+    REM --- Calculate NEW positions for squares ---
     for /l %%b in (1,1,!num_blocks!) do (
-        REM --- Strong shake effect ---
         set /a "shake_x = !random! %% 11 - 5"
         set /a "shake_y = !random! %% 7 - 3"
         
-        REM --- Slow drift that can go off-screen ---
         set /a "drift_chance = !random! %% 100"
         if !drift_chance! LSS 10 (
             set /a "drift_x = !random! %% 7 - 3"
@@ -165,7 +223,6 @@ for /l %%b in (1,1,!num_blocks!) do (
             set /a "block%%b_base_x = !block%%b_base_x! + !drift_x!"
             set /a "block%%b_base_y = !block%%b_base_y! + !drift_y!"
             
-            REM --- Allow partial off-screen positioning ---
             if !block%%b_base_x! LSS -15 set /a "block%%b_base_x = 70"
             if !block%%b_base_x! GTR 85 set /a "block%%b_base_x = -10"
             if !block%%b_base_y! LSS -3 set /a "block%%b_base_y = 20"
@@ -182,19 +239,16 @@ for /l %%b in (1,1,!num_blocks!) do (
         set /a "end_y = !block%%b_current_y! + !square_height!"
         if !end_y! GTR %height% set /a "end_y = %height%"
         
-        REM --- Only draw if at least partially on screen ---
         if !block%%b_current_y! LEQ %height% if !end_y! GTR 0 (
             set /a "start_y = !block%%b_current_y!"
             if !start_y! LSS 1 set /a "start_y = 1"
             
             for /l %%y in (!start_y!,1,!end_y!) do (
-                REM --- Create rough edges ---
                 set /a "left_indent = !random! %% 3"
                 set /a "right_reduce = !random! %% 4"
                 set /a "line_width = !block%%b_size! - !right_reduce!"
                 set /a "actual_x = !block%%b_current_x! + !left_indent!"
                 
-                REM --- Only draw if x position is somewhat reasonable ---
                 if !actual_x! GTR -20 if !actual_x! LSS 100 (
                     set "draw_str="
                     for /l %%i in (1,1,!line_width!) do set "draw_str=!draw_str! "
@@ -204,11 +258,11 @@ for /l %%b in (1,1,!num_blocks!) do (
         )
     )
 
-    REM --- Render the scrolling log background ---
-    for /l %%i in (1,1,%height%) do (
-        echo %ESC%[%%i;1H%ESC%[37mFATAL_ERROR !screen_line_%%i!
+    REM --- Render the screen: FATAL_ERROR on left, hex dumps on right ---
+    for /l %%i in (1,1,22) do (
+        echo %ESC%[%%i;1H%ESC%[37mFATAL_ERROR  !screen_line_%%i!
     )
 
     REM --- Animation delay ---
-    ping localhost -n 1 -w 80 > nul
+    ping localhost -n 1 -w 90 > nul
 goto infinite_chaos_loop
