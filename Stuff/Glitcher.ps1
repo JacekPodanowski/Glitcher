@@ -9,40 +9,65 @@ function Write-Glitchy {
         [switch]$IsLogo
     )
     
+    # Get the console width dynamically, with a fallback for safety
+    $consoleWidth = try { $Host.UI.RawUI.WindowSize.Width } catch { 80 }
+
     if ($IsLogo) {
+        # --- NEW: Updated color palette to include Black ---
+        $glitchColors = @('Black', 'DarkGray', 'Gray')
+
         $Text.ToCharArray() | ForEach-Object {
             $char = $_
             
+            # Randomly trigger a glitch effect for a character
             if ((Get-Random -Minimum 1 -Maximum 100) -le 25) {
                 $glitchLines = Get-Random -Minimum 2 -Maximum 5
+                $glitchPositions = @() # Store where glitches are drawn to ensure they are cleaned up
+
+                # --- STAGE 1: DRAW GLITCH ARTIFACTS ---
                 for ($i = 0; $i -lt $glitchLines; $i++) {
                     $currentPos = [Console]::CursorTop
                     $currentLeft = [Console]::CursorLeft
                     
-                    [Console]::SetCursorPosition((Get-Random -Minimum 0 -Maximum 70), ($currentPos + (Get-Random -Minimum 1 -Maximum 6)))
+                    $glitchLeft = Get-Random -Minimum 0 -Maximum $consoleWidth
+                    $glitchTop = $currentPos + (Get-Random -Minimum 1 -Maximum 6)
+                    [Console]::SetCursorPosition($glitchLeft, $glitchTop)
                     
-                    $burstLength = Get-Random -Minimum 3 -Maximum 8
-                    $grayChars = @('#', '@', '%', '&', '*', '+', '=', '-', '_', '~', '|', '\', '/')
+                    $glitchPositions += $glitchTop
+                    
+                    # --- NEW: A single color is chosen for the entire burst ---
+                    $burstColor = Get-Random $glitchColors
+                    
+                    # --- NEW: Burst length is now 4 to 10 characters ---
+                    $burstLength = Get-Random -Minimum 4 -Maximum 10
+                    $glitchChars = @('#', '@', '%', '&', '*', '+', '=', '-', '_', '~', '|', '\', '/')
                     for ($j = 0; $j -lt $burstLength; $j++) {
-                        $grayChar = Get-Random $grayChars
-                        Write-Host -NoNewline $grayChar -ForegroundColor DarkGray
+                        $glitchChar = Get-Random $glitchChars
+                        # All characters in the burst use the same color
+                        Write-Host -NoNewline $glitchChar -ForegroundColor $burstColor
                     }
                     
+                    # Restore cursor to original position
                     [Console]::SetCursorPosition($currentLeft, $currentPos)
                 }
                 
-                Start-Sleep -Milliseconds (Get-Random -Minimum 30 -Maximum 60)
+                # Pause briefly to make the glitch visible
+                Start-Sleep -Milliseconds (Get-Random -Minimum 40 -Maximum 80)
                 
-                for ($i = 0; $i -lt $glitchLines; $i++) {
+                # --- STAGE 2: CLEAR GLITCH ARTIFACTS ---
+                $uniquePositions = $glitchPositions | Sort-Object -Unique
+                foreach ($pos in $uniquePositions) {
                     $currentPos = [Console]::CursorTop
                     $currentLeft = [Console]::CursorLeft
                     
-                    [Console]::SetCursorPosition(0, ($currentPos + (Get-Random -Minimum 1 -Maximum 6)))
-                    Write-Host -NoNewline (" " * 80)
+                    [Console]::SetCursorPosition(0, $pos)
+                    Write-Host -NoNewline (" " * $consoleWidth)
+                    
                     [Console]::SetCursorPosition($currentLeft, $currentPos)
                 }
             }
             
+            # Write the actual character of the text after the glitch effect
             if ($char -eq ' ') {
                 Write-Host -NoNewline $char
             }
@@ -53,6 +78,7 @@ function Write-Glitchy {
         }
     }
     else {
+        # Standard, non-glitchy text writing
         $Text.ToCharArray() | ForEach-Object {
             if ($_ -eq ' ') {
                 Write-Host -NoNewline $_
@@ -92,25 +118,22 @@ Write-Host ""
 
 # --- Centered and Aligned Logo Generation ---
 $logoText1 = "GLITCH INJECTOR"
-$logoText3 = "6l17ch 7h3 fuck 0u7 0f 7h3m"
-$maxLength = $logoText3.Length # Get the length of the longest string
+$logoText3 = "  6l17ch 7h3 fuck 0u7 0f 7h3m  "
+$maxLength = $logoText3.Length
 
-# Calculate padding for the first line to match the max length
 $padding1 = [math]::Max(0, ($maxLength - $logoText1.Length)) / 2
 $leftPadding1 = " " * [math]::Floor($padding1)
 $rightPadding1 = " " * [math]::Ceiling($padding1)
 $centeredText1 = $leftPadding1 + $logoText1 + $rightPadding1
 
-# Generate the middle line to match the max length
 $line2Content = [string]([char]0x2591) * $maxLength
 
-# Define borders
 $border = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591
 $reverseBorder = [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
 
-# Assemble the final logo lines
 $logoLine1 = $border + $centeredText1 + $reverseBorder
 $logoLine2 = $border + $line2Content + $reverseBorder
+# --- FIX: Removed the extra leading space to correct the alignment ---
 $logoLine3 = $border + $logoText3 + $reverseBorder
 
 Write-Centered -Text $logoLine1 -IsLogo
@@ -172,7 +195,7 @@ $finalPayload | Out-File -FilePath $OutputFile -Encoding UTF8
 Write-Glitchy -Text ">> Payload written to '$OutputFile'."
 Write-Host ""
 
-$completeLine = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "> ### PROCESS COMPLETE ### <" + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
+$completeLine = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "   PROCESS COMPLETE   " + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
 Write-Centered -Text $completeLine -IsLogo
 
 Write-Host ""
