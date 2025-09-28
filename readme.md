@@ -1,1 +1,1 @@
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Jacek\Stuff\Sprzety\Glitcher\shit-html\Glitcher.ps1"
+just cicik it ;x

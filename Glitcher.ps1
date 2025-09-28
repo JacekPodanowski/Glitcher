@@ -1,3 +1,8 @@
+# --- File Configuration (Using Your Names) ---
+$EffectLibrary = ".\glitch_effects.js"
+$OutputFile = "final_glitch_payload.js"
+$TestPage = ".\Test_page.html"
+
 # --- Glitchy Console Output Function ---
 function Write-Glitchy {
     param(
@@ -7,27 +12,27 @@ function Write-Glitchy {
     )
     
     if ($IsLogo) {
-        # Special logo effect with random glitch bursts
+        # Special logo effect with stronger glitch bursts, no character insertion
         $indent = " " * (Get-Random -Minimum 0 -Maximum 3)
         Write-Host -NoNewline $indent
         
         $Text.ToCharArray() | ForEach-Object {
             $char = $_
             
-            # Higher chance of glitch effects for logo
-            if ((Get-Random -Minimum 1 -Maximum 100) -le 15) {
-                # Create glitch burst at random position below
-                $glitchLines = Get-Random -Minimum 1 -Maximum 4
+            # Much higher chance of stronger glitch effects for logo
+            if ((Get-Random -Minimum 1 -Maximum 100) -le 25) {
+                # Create stronger glitch burst at random positions
+                $glitchLines = Get-Random -Minimum 2 -Maximum 6
                 for ($i = 0; $i -lt $glitchLines; $i++) {
                     $currentPos = [Console]::CursorTop
                     $currentLeft = [Console]::CursorLeft
                     
-                    # Move cursor down randomly
-                    [Console]::SetCursorPosition((Get-Random -Minimum 0 -Maximum 60), ($currentPos + (Get-Random -Minimum 1 -Maximum 5)))
+                    # Move cursor down and to random positions
+                    [Console]::SetCursorPosition((Get-Random -Minimum 0 -Maximum 70), ($currentPos + (Get-Random -Minimum 1 -Maximum 8)))
                     
-                    # Burst of glitch characters
-                    $burstLength = Get-Random -Minimum 3 -Maximum 12
-                    $glitchChars = @('|', '/', '\', '-', '_', '*', '#', '@', '%')
+                    # Stronger burst of glitch characters
+                    $burstLength = Get-Random -Minimum 8 -Maximum 20
+                    $glitchChars = @('|', '/', '\', '-', '_', '*', '#', '@', '%', '&', '+', '=', '~')
                     for ($j = 0; $j -lt $burstLength; $j++) {
                         Write-Host -NoNewline (Get-Random $glitchChars)
                     }
@@ -36,42 +41,31 @@ function Write-Glitchy {
                     [Console]::SetCursorPosition($currentLeft, $currentPos)
                 }
                 
-                Start-Sleep -Milliseconds (Get-Random -Minimum 50 -Maximum 150)
+                Start-Sleep -Milliseconds (Get-Random -Minimum 80 -Maximum 200)
                 
                 # Clear the glitch characters
                 for ($i = 0; $i -lt $glitchLines; $i++) {
                     $currentPos = [Console]::CursorTop
                     $currentLeft = [Console]::CursorLeft
                     
-                    [Console]::SetCursorPosition(0, ($currentPos + (Get-Random -Minimum 1 -Maximum 5)))
+                    [Console]::SetCursorPosition(0, ($currentPos + (Get-Random -Minimum 1 -Maximum 8)))
                     Write-Host -NoNewline (" " * 80)  # Clear line
                     [Console]::SetCursorPosition($currentLeft, $currentPos)
                 }
             }
             
-            # Write the actual character
+            # Write the actual character (no glitch character insertion)
             Write-Host -NoNewline $char
-            Start-Sleep -Milliseconds (Get-Random -Minimum 15 -Maximum 60)
+            Start-Sleep -Milliseconds (Get-Random -Minimum 20 -Maximum 80)
         }
     }
     else {
-        # Regular glitch effect for other text
+        # Regular effect for other text - no character insertion, just typing
         $indent = " " * (Get-Random -Minimum 0 -Maximum 4)
         Write-Host -NoNewline $indent
         
         $Text.ToCharArray() | ForEach-Object {
-            $char = $_
-            
-            if ((Get-Random -Minimum 1 -Maximum 100) -le 8) {
-                $glitchChars = @('|', '-', '_', '~', '*', '#', '@', '%')
-                $glitchChar = Get-Random $glitchChars
-                Write-Host -NoNewline $glitchChar
-                Start-Sleep -Milliseconds (Get-Random -Minimum 10 -Maximum 30)
-                Write-Host -NoNewline "`b "
-                Write-Host -NoNewline "`b"
-            }
-            
-            Write-Host -NoNewline $char
+            Write-Host -NoNewline $_
             Start-Sleep -Milliseconds (Get-Random -Minimum 8 -Maximum 25)
         }
     }
@@ -83,14 +77,15 @@ function Write-Glitchy {
 # --- Main Script ---
 
 Clear-Host
-Write-Glitchy -Text "### 6L17CH * 4R7 * 1NJ3C70R ###" -IsLogo
-Write-Glitchy -Text "==============================================" -IsLogo
+Write-Glitchy -Text "### GLITCH INJECTOR ###" -IsLogo
+Write-Glitchy -Text "~*#@%&+=|\/~*#@%&+=|\/~*#@%&+=|\/~" -IsLogo
+Write-Glitchy -Text "     6l17ch 7h3 fuck 0u7 0f 7h3m     " -IsLogo
 Write-Host ""
 Write-Glitchy -Text "          [1] Generate Payload for a REAL WEBSITE"
 Write-Glitchy -Text "          [2] Generate Payload for LOCAL TESTING"
 Write-Host ""
 
-# Rest of your script remains the same...
+# Use a standard, stable Read-Host for the menu
 $choice = Read-Host "          Select_Mode [1-2]"
 
 # --- Main Logic Switch ---
