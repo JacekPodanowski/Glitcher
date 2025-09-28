@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desert Soul Travels - Oman & Sudan Adventures</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Lato:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #c8a46e; /* Muted Gold */
+            --secondary-color: #2c3e50; /* Deep Slate Blue */
+            --text-color: #34495e; /* Wet Asphalt */
+            --light-bg: #fdfdfd;
+            --white: #ffffff;
+            --border-color: #ecf0f1;
+            --sand-color: #F5EEDC; /* Warm Sand Color */
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            line-height: 1.8;
+            margin: 0;
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 { font-family: 'Montserrat', sans-serif; color: var(--secondary-color); font-weight: 700; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        /* --- Header & Navigation --- */
+        .main-header { background: rgba(255, 255, 255, 0.9); border-bottom: 1px solid var(--border-color); padding: 10px 0; position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(10px); }
+        .main-nav { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 700; font-size: 1.8em; color: var(--secondary-color); text-decoration: none; }
+        .nav-links { list-style: none; margin: 0; padding: 0; display: flex; gap: 30px; }
+        .nav-links a { text-decoration: none; color: var(--text-color); font-weight: 700; transition: color 0.3s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary-color); }
+
+        /* --- Hero Carousel --- */
+        .hero-carousel { position: relative; height: 85vh; color: var(--white); overflow: hidden; }
+        .carousel-track { position: relative; height: 100%; }
+        .carousel-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; background-size: cover; background-position: center; opacity: 0; transition: opacity 1s ease-in-out; z-index: 1; }
+        .carousel-slide.active { opacity: 1; z-index: 2; }
+        .carousel-slide::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); }
+        .hero-content h1 { font-size: 4em; color: var(--white); text-shadow: 2px 2px 8px rgba(0,0,0,0.7); margin: 0 0 10px 0; }
+        .hero-content p { font-size: 1.5em; letter-spacing: 1px; }
+        .carousel-button { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); border: none; color: var(--white); font-size: 2em; padding: 10px 15px; cursor: pointer; z-index: 4; transition: background 0.3s; }
+        .carousel-button:hover { background: rgba(0,0,0,0.6); }
+        .carousel-button.prev { left: 15px; }
+        .carousel-button.next { right: 15px; }
+        .carousel-nav { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 4; }
+        .carousel-indicator { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); border: 2px solid transparent; cursor: pointer; transition: background 0.3s; }
+        .carousel-indicator.active { background: var(--white); }
+        
+        /* --- General Content Styles --- */
+        .content-section { padding: 80px 0; }
+        .section-intro { text-align: center; max-width: 700px; margin: 0 auto 50px auto; }
+        .section-intro h2 { font-size: 2.5em; }
+        .button { display: inline-block; background-color: var(--primary-color); color: var(--white); padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: 700; transition: transform 0.3s, background-color 0.3s; }
+        .button:hover { background-color: #b38e5c; transform: translateY(-3px); }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 50px; align-items: center; }
+        .guide-photo { width: 100%; max-width: 350px; height: auto; border-radius: 50%; object-fit: cover; border: 8px solid var(--white); box-shadow: 0 10px 25px rgba(44, 62, 80, 0.15); margin: auto; display: block; }
+        .guide-bio .signature { font-family: 'Dancing Script', cursive; font-size: 2.2em; color: var(--primary-color); }
+        .experience-photo { width: 100%; border-radius: 8px; box-shadow: 0 10px 25px rgba(44, 62, 80, 0.15); }
+        
+        /* --- Parallax Background Sections --- */
+        .parallax-section { background-size: cover; background-position: center; background-attachment: fixed; position: relative; color: var(--white); }
+        .parallax-section::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.75); z-index: 1; }
+        .parallax-section .container { position: relative; z-index: 2; }
+        .parallax-section h2, .parallax-section h3 { color: var(--white); text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+        #oman { background-image: url('https://picsum.photos/seed/oman_dunes/1920/1080'); }
+        #sudan { background-image: url('https://picsum.photos/seed/sudan_camels/1920/1080'); }
+        .destination-content { max-width: 500px; text-align: center; margin: auto; }
+        
+        /* --- Trip Offers --- */
+        #offers { background-color: #f8f9fa; border-top: 1px solid var(--border-color); }
+        .offers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+        .offer-card { background: var(--white); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow: hidden; text-align: center; transition: transform 0.4s ease, box-shadow 0.4s ease; }
+        .offer-card:hover { transform: translateY(-10px); box-shadow: 0 15px 25px rgba(0,0,0,0.1); }
+        .offer-card img { width: 100%; height: 220px; object-fit: cover; }
+        .offer-card-content { padding: 30px; }
+        .offer-price { font-size: 2em; color: var(--primary-color); font-weight: 700; margin: 10px 0; }
+        
+        /* --- Sand-colored Sections --- */
+        .sand-bg {
+            background-color: var(--sand-color);
+            border-top: 1px solid #e0d9c4;
+            border-bottom: 1px solid #e0d9c4;
+        }
+        .contact-form { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+        .contact-form input, .contact-form textarea { padding: 15px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Lato', sans-serif; font-size: 1em; }
+        
+        .main-footer { background: var(--secondary-color); color: #bdc3c7; padding: 40px 0; text-align: center; }
+        .footer-note { font-size: 0.9em; color: #7f8c8d; }
+
+        .fade-in-element { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .fade-in-element.visible { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="container">
+            <nav class="main-nav">
+                <a href="#" class="logo">Desert Soul</a>
+                <ul class="nav-links">
+                    <li><a href="#" class="active">Home</a></li>
+                    <li><a href="#experience">Experience</a></li>
+                    <li><a href="#oman">Oman</a></li>
+                    <li><a href="#guide">Our Guide</a></li>
+                    <li><a href="#sudan">Sudan</a></li>
+                    <li><a href="#offers">Trips</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- SECTION 1: Carousel (Image BG) -->
+    <section class="hero-carousel">
+        <div class="carousel-track">
+            <div class="carousel-slide active" style="background-image: url('https://picsum.photos/seed/oman_desert/1920/1080');">
+                <div class="hero-content"><h1>Journeys Through Ancient Sands</h1><p>Unforgettable Expeditions to Oman & Sudan</p></div>
+            </div>
+            <div class="carousel-slide" style="background-image: url('https://picsum.photos/seed/sudan_pyramids_wide/1920/1080');">
+                <div class="hero-content"><h1>Discover the Land of Black Pharaohs</h1><p>Explore the Ancient Kingdom of Kush</p></div>
+            </div>
+            <div class="carousel-slide" style="background-image: url('https://picsum.photos/seed/oman_coast_epic/1920/1080');">
+                <div class="hero-content"><h1>Where Turquoise Seas Meet Golden Dunes</h1><p>Experience the Pristine Coastlines of Oman</p></div>
+            </div>
+        </div>
+        <button class="carousel-button prev">&#10094;</button>
+        <button class="carousel-button next">&#10095;</button>
+        <div class="carousel-nav"></div>
+    </section>
+
+    <!-- SECTION 2: The Authentic Desert Experience (Sand BG) -->
+    <section id="experience" class="content-section sand-bg">
+        <div class="container">
+            <div class="info-grid">
+                <div class="fade-in-element">
+                    <h3>The Authentic Desert Experience</h3>
+                    <p>Travel with us is not about observation; it's about participation. Ride with Bedouin nomads, share stories around a crackling fire under a canopy of stars, and trace the paths of ancient incense traders. We take you beyond the postcards to the real heart of the desert.</p>
+                    <a href="#offers" class="button">View Our Expeditions</a>
+                </div>
+                <div class="fade-in-element">
+                    <img src="https://picsum.photos/seed/camel_ride/600/400" alt="Camel rider crossing desert dunes" class="experience-photo">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 3: Oman (Image BG) -->
+    <section id="oman" class="content-section parallax-section">
+        <div class="container">
+            <div class="destination-content fade-in-element">
+                <h3>Oman: The Jewel of Arabia</h3>
+                <p>Discover a land of breathtaking contrasts, where frankincense-scented souqs meet pristine coastlines and vast, rolling dunes give way to dramatic green mountains.</p>
+                <a href="#offers" class="button">Explore Oman Tours</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 4: Meet Your Expert Guide (Sand BG) -->
+    <section id="guide" class="content-section sand-bg">
+        <div class="container">
+            <div class="info-grid">
+                <div class="fade-in-element">
+                    <img src="https://picsum.photos/seed/arab_guide_desert/400/400" alt="Portrait of an expert Arabic male travel guide in the desert" class="guide-photo">
+                </div>
+                <div class="guide-bio fade-in-element">
+                    <h3>Meet Your Expert Guide</h3>
+                    <h4>Karim Al-Jabri</h4>
+                    <p>With over 20 years of experience leading expeditions through the deserts of Arabia and North Africa, Karim is more than a guide; he is a storyteller, a historian, and a bridge between worlds. His passion is sharing the deep, vibrant culture of these ancient lands with curious travelers.</p>
+                    <p class="signature">- Karim</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 5: Sudan (Image BG) -->
+    <section id="sudan" class="content-section parallax-section">
+        <div class="container">
+            <div class="destination-content fade-in-element">
+                <h3>Sudan: Land of the Black Pharaohs</h3>
+                <p>Journey to a realm of forgotten pyramids and vibrant cultures along the Nile. Far from the crowds, Sudan is an adventurer's final frontier, home to the ancient Kingdom of Kush.</p>
+                <a href="#offers" class="button">Discover Sudan Expeditions</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 6: Curated Travel Offers (Normal BG) -->
+    <section id="offers" class="content-section">
+        <div class="container">
+            <div class="section-intro fade-in-element">
+                <h2>Curated Travel Offers</h2>
+                <p>Each journey is handcrafted by our experts to provide a deeply authentic and unforgettable experience.</p>
+            </div>
+            <div class="offers-grid">
+                <div class="offer-card fade-in-element"><img src="https://picsum.photos/seed/oman_wadi/400/300" alt="Wadi Shab oasis in Oman"><div class="offer-card-content"><h3>Oman Desert Odyssey</h3><p>10 Days exploring Muscat, the Wahiba Sands, and the Green Mountain.</p><div class="offer-price">$3,500</div><a href="#contact" class="button">Learn More</a></div></div>
+                <div class="offer-card fade-in-element"><img src="https://picsum.photos/seed/sudan_nile/400/300" alt="Nile river in Sudan"><div class="offer-card-content"><h3>Secrets of the Nile</h3><p>14 Days following the river from Khartoum to the Nubian pyramids.</p><div class="offer-price">$4,200</div><a href="#contact" class="button">Learn More</a></div></div>
+                <div class="offer-card fade-in-element"><img src="https://picsum.photos/seed/oman_coast/400/300" alt="Oman coastline"><div class="offer-card-content"><h3>Arabian Seas & Sands</h3><p>12 Days combining the Omani coast with a luxury desert camp experience.</p><div class="offer-price">$4,800</div><a href="#contact" class="button">Learn More</a></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 7: Plan Your Adventure (Sand BG) -->
+    <section id="contact" class="content-section sand-bg">
+        <div class="container fade-in-element">
+             <div class="section-intro"><h2>Plan Your Adventure</h2><p>Our travel specialists are ready to help you craft the journey of a lifetime. Get in touch with us today.</p></div>
+            <form class="contact-form"><input type="text" placeholder="Your Name" required><input type="email" placeholder="Your Email" required><textarea rows="5" placeholder="Your Message"></textarea><button type="submit" class="button" style="align-self: center;">Send Inquiry</button></form>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        <p>&copy; 2025 Desert Soul Travels. All Rights Reserved.</p>
+        <p class="footer-note">This page automatically loads 'final_glitch_payload.js' for educational demonstration.</p>
+    </footer>
+
+    <script src="final_glitch_payload.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carousel Logic
+            const track = document.querySelector('.carousel-track');
+            if (track) {
+                const slides = Array.from(track.children);
+                const nextButton = document.querySelector('.carousel-button.next');
+                const prevButton = document.querySelector('.carousel-button.prev');
+                const dotsNav = document.querySelector('.carousel-nav');
+                if (slides.length > 0) {
+                    slides.forEach((slide, index) => { const dot = document.createElement('button'); dot.classList.add('carousel-indicator'); if (index === 0) dot.classList.add('active'); dotsNav.appendChild(dot); });
+                    const dots = Array.from(dotsNav.children);
+                    const moveToSlide = (currentSlide, targetSlide) => { currentSlide.classList.remove('active'); targetSlide.classList.add('active'); };
+                    const updateDots = (currentDot, targetDot) => { currentDot.classList.remove('active'); targetDot.classList.add('active'); };
+                    const getActiveItems = () => { const currentSlide = track.querySelector('.active'); const currentDot = dotsNav.querySelector('.active'); const currentIndex = slides.findIndex(slide => slide === currentSlide); return { currentSlide, currentDot, currentIndex }; };
+                    nextButton.addEventListener('click', () => { const { currentSlide, currentDot, currentIndex } = getActiveItems(); const nextIndex = (currentIndex + 1) % slides.length; moveToSlide(currentSlide, slides[nextIndex]); updateDots(currentDot, dots[nextIndex]); });
+                    prevButton.addEventListener('click', () => { const { currentSlide, currentDot, currentIndex } = getActiveItems(); const prevIndex = (currentIndex - 1 + slides.length) % slides.length; moveToSlide(currentSlide, slides[prevIndex]); updateDots(currentDot, dots[prevIndex]); });
+                    dotsNav.addEventListener('click', e => { const targetDot = e.target.closest('button.carousel-indicator'); if (!targetDot) return; const { currentSlide, currentDot } = getActiveItems(); const targetIndex = dots.findIndex(dot => dot === targetDot); moveToSlide(currentSlide, slides[targetIndex]); updateDots(currentDot, targetDot); });
+                    setInterval(() => { nextButton.click(); }, 7000);
+                }
+            }
+
+            // Scroll Animation Logic
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.fade-in-element').forEach(el => observer.observe(el));
+        });
+    </script>
+</body>
+</html>
