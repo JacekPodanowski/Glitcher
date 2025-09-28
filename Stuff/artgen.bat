@@ -4,12 +4,7 @@ setlocal enabledelayedexpansion
 REM ####################################################################
 REM ##                                                                ##
 REM ##           "Final Masterpiece" Glitch Art Performance           ##
-REM ##                     --- v13.0 BORDER FOCUSED ---               ##
-REM ##                                                                ##
-REM ##   NEW: Squares prefer border positions but occasionally drift  ##
-REM ##   toward center, creating more realistic crash behavior.       ##
-REM ##                                                                ##
-REM ##          CLOSE THE WINDOW TO EXIT THE INFINITE LOOP.           ##
+REM ##                          --- v13.0 ---                         ##
 REM ##                                                                ##
 REM ####################################################################
 
@@ -125,15 +120,18 @@ set /a "full_error_timer=0"
 set "full_error_active=0"
 
 :infinite_chaos_loop
-    REM --- More frequent freeze chance (15% chance for 1-10 second freeze) ---
+    REM --- More frequent freeze chance (10% chance for 4-16 second freeze) ---
     set /a "freeze_chance = !random! * 100 / 32768"
-    if !freeze_chance! LSS 15 (
-        set /a "freeze_time = !random! * 10 / 32768 + 1"
+    if !freeze_chance! LSS 10 (
+        set /a "freeze_time = !random! * 12 / 32768 + 5"
+        set /a "freeze_duration_ms = !freeze_time! * 1000"
+        set /a "random_freq = ( !random! * (100 - 37 + 1) / 32768 ) + 37"
+        start "" /MIN powershell -Command "[System.Console]::Beep(!random_freq!, !freeze_duration_ms!)"
         ping localhost -n !freeze_time! > nul
         
-        REM --- 20% chance during freeze to spawn displaced restart process ---
+        REM --- 25% chance during freeze to spawn displaced restart process ---
         set /a "restart_chance = !random! * 100 / 32768"
-        if !restart_chance! LSS 20 (
+        if !restart_chance! LSS 25 (
             REM --- Calculate random displacement ---
             set /a "disp_x = !random! * 30 / 32768 + 5"
             set /a "disp_y = !random! * 15 / 32768 + 2"
@@ -228,9 +226,9 @@ set "full_error_active=0"
         set "memory_line=!section_name! 0x!base_addr_high!!base_addr_low! !hex_data!"
         set "screen_line_0=!memory_line!"
         
-        REM --- 20% chance for error overlay on this line ---
+        REM --- 25% chance for error overlay on this line ---
         set /a "overlay_chance = !random! * 100 / 32768"
-        if !overlay_chance! LSS 20 (
+        if !overlay_chance! LSS 15 (
             set /a "overlay_idx = !random! * %overlay_count% / 32768"
             set "temp_overlays=!overlay_errors!"
             for /l %%i in (1,1,!overlay_idx!) do (
@@ -244,11 +242,11 @@ set "full_error_active=0"
             
             REM --- 30% chance for stacked overlays (2-3 times) ---
             set /a "stack_chance = !random! * 100 / 32768"
-            if !stack_chance! LSS 30 (
+            if !stack_chance! LSS 40 (
                 set "screen_line_0=!before_overlay!%ESC%[30;47m!overlay_text!%ESC%[0m %ESC%[30;47m!overlay_text!%ESC%[0m"
                 REM --- 10% chance for triple stack ---
                 set /a "triple_chance = !random! * 100 / 32768"
-                if !triple_chance! LSS 10 (
+                if !triple_chance! LSS 20 (
                     set "screen_line_0=!screen_line_0! %ESC%[30;47m!overlay_text!%ESC%[0m"
                 )
             ) else (
@@ -371,5 +369,5 @@ set "full_error_active=0"
     )
 
     REM --- Animation delay ---
-    ping localhost -n 1 -w 90 > nul
+    ping localhost -n 1 -w 100 > nul
 goto infinite_chaos_loop
