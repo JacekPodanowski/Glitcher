@@ -90,9 +90,9 @@ Clear-Host
 Write-Host ""
 Write-Host ""
 
-$logoLine1 = [char]0x2593 + [char]0x2592 + [char]0x2591 + " ### GLITCH INJECTOR ### " + [char]0x2591 + [char]0x2592 + [char]0x2593
-$logoLine2 = [char]0x2588 + "=================================" + [char]0x2588
-$logoLine3 = [char]0x2593 + [char]0x2591 + " 6l17ch 7h3 fuck 0u7 0f 7h3m " + [char]0x2591 + [char]0x2593
+$logoLine1 = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "     GLITCH INJECTOR     " + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
+$logoLine2 = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 +  [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
+$logoLine3 = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "6l17ch 7h3 fuck 0u7 0f 7h3m" + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
 
 Write-Centered -Text $logoLine1 -IsLogo
 Write-Centered -Text $logoLine2 -IsLogo
@@ -100,8 +100,8 @@ Write-Centered -Text $logoLine3 -IsLogo
 
 Write-Host ""
 Write-Host ""
-Write-Centered -Text "[ 1 ] Generate Payload for a REAL WEBSITE"
-Write-Centered -Text "[ 2 ] Generate Payload for LOCAL TESTING"
+Write-Centered -Text "> [ 1 ] Generate Payload for a REAL WEBSITE <"
+Write-Centered -Text "> [ 2 ] Generate Payload for LOCAL TESTING <"
 Write-Host ""
 
 $consoleWidth = try { $Host.UI.RawUI.WindowSize.Width } catch { 80 }
@@ -151,23 +151,23 @@ $finalPayload | Out-File -FilePath $OutputFile -Encoding UTF8
 Write-Glitchy -Text ">> Payload written to '$OutputFile'."
 Write-Host ""
 
-$completeLine = [char]0x2591 + [char]0x2588 + " ### PROCESS COMPLETE ### " + [char]0x2588 + [char]0x2591
+$completeLine = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "> ### PROCESS COMPLETE ### <" + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
 Write-Centered -Text $completeLine -IsLogo
 
 Write-Host ""
 
 if ($choice -eq '1') {
     Write-Glitchy -Text "[[ HOW TO USE ON A REAL WEBSITE ]]"
-    Write-Centered -Text "1. Open '$OutputFile' and copy its entire content."
-    Write-Centered -Text "2. Navigate to your target website in your browser."
-    Write-Centered -Text "3. Open Developer Tools (F12 or Ctrl+Shift+I)."
-    Write-Centered -Text "4. Go to the 'Console' tab."
-    Write-Centered -Text "5. Paste the code into the console and press Enter."
+    Write-Centered -Text "> 1. Open '$OutputFile' and copy its entire content."
+    Write-Centered -Text "> 2. Navigate to your target website in your browser."
+    Write-Centered -Text "> 3. Open Developer Tools (F12 or Ctrl+Shift+I)."
+    Write-Centered -Text "> 4. Go to the 'Console' tab."
+    Write-Centered -Text "> 5. Paste the code into the console and press Enter."
 }
 
 if ($choice -eq '2') {
     if (Test-Path $TestPage) {
-        $openChoice = Read-Host "? Open '$TestPage' to view the result? (y/n)"
+        $openChoice = Read-Host "> Open '$TestPage' to view the result? (y/n)"
         if ($openChoice -eq 'y') {
             Write-Glitchy -Text ">> Launching test environment..."
             Start-Process $TestPage
@@ -175,7 +175,7 @@ if ($choice -eq '2') {
     }
     else {
         Write-Glitchy -Text ">> NOTICE: Your test page '$TestPage' was not found."
-        Write-Centered -Text "The payload '$OutputFile' was still created successfully."
+        Write-Centered -Text "> The payload '$OutputFile' was still created successfully."
     }
 }
 
