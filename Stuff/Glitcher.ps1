@@ -1,8 +1,6 @@
-$EffectLibrary = ".\glitch_effects.js"
-$OutputFile = "final_glitch_payload.js"
+$PayloadFile = ".\glitch_payload.js"
 $TestPage = ".\Test_page.html"
-
-$ArtgenScriptPath = Join-Path $PSScriptRoot "artgen.bat"
+$InjectorBatPath = Join-Path $PSScriptRoot "injector.bat"
 $username = $env:USERNAME
 
 function Write-Glitchy {
@@ -115,8 +113,8 @@ $protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine3 -IsLog
 
 Write-Host ""
 Write-Host ""
-$protectedRows.Add([Console]::CursorTop); Write-Centered -Text "> [ 1 ] Generate Payload for REAL WEBSITE"
-$protectedRows.Add([Console]::CursorTop); Write-Centered -Text "> [ 2 ] Generate Payload for LOCAL TESTING"
+$protectedRows.Add([Console]::CursorTop); Write-Centered -Text "> [ 1 ] Inject into REAL WEBSITE"
+$protectedRows.Add([Console]::CursorTop); Write-Centered -Text "> [ 2 ] Test on LOCAL PAGE"
 Write-Host ""
 
 $consoleWidth = try { $Host.UI.RawUI.WindowSize.Width } catch { 80 }
@@ -126,7 +124,7 @@ $promptCursorLeft = [Console]::CursorLeft
 $promptCursorTop = [Console]::CursorTop
 $protectedRows.Add($promptCursorTop)
 
-# --- Check for artgen.bat before starting the loop
+$ArtgenScriptPath = Join-Path $PSScriptRoot "artgen.bat"
 if (-not (Test-Path $ArtgenScriptPath)) {
     $warningMessage = "WARNING: '$ArtgenScriptPath' not found. Vandal mode visuals will not run."
     $warningPadding = " " * [math]::Floor(($consoleWidth - $warningMessage.Length) / 2)
@@ -151,28 +149,23 @@ $idleTriggerSeconds = 5
 $postMessageDelaySeconds = 5
 $timeOfLastMessageEnd = [datetime]::MinValue
 
-# --- SIMPLIFIED AND CORRECTED INPUT LOOP ---
 while ($true) {
     if ($Host.UI.RawUI.KeyAvailable) {
         $key = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
         
-        # Only process the "key down" event to prevent double-reads
         if (-not $key.KeyDown) { continue }
 
-        # If user presses 1 or 2, set the choice, display it, and immediately break.
         if ($key.Character -eq '1' -or $key.Character -eq '2') {
             $choice = $key.Character
             Write-Host -NoNewline $key.Character
-            Write-Host "" # Move to the next line cleanly
+            Write-Host ""
             break 
         }
         
-        # Reset the idle timer for any other key press
         $stopwatch.Restart()
         $timeOfLastMessageEnd = [datetime]::MinValue
     }
 
-    # This idle/vandal logic only runs if no valid key has been pressed yet
     if ($vandalModeActive) {
         $inputCursorLeft = [Console]::CursorLeft; $inputCursorTop = [Console]::CursorTop
         do { $randTop = Get-Random -Minimum 0 -Maximum ($Host.UI.RawUI.WindowSize.Height - 1) } while ($protectedRows -contains $randTop)
@@ -217,54 +210,77 @@ while ($true) {
     Start-Sleep -Milliseconds 50
 }
 
-# (The rest of the script remains unchanged)
+# Process the selected mode
 switch ($choice) {
-    '1' { Write-Host ""; Write-Glitchy -Text ">> MODE: REAL SITE PAYLOAD" }
-    '2' { Write-Host ""; Write-Glitchy -Text ">> MODE: LOCAL TESTING" }
-    default { Write-Host ""; Write-Glitchy -Text ">> ERROR: INVALID_SELECTION"; Write-Centered -Text "> SCRIPT TERMINATED <"; exit 1 }
-}
-
-if (-not (Test-Path $EffectLibrary)) {
-    Write-Glitchy -Text "[[ FATAL ERROR ]]"; Write-Glitchy -Text "Core library '$EffectLibrary' not found."; Write-Centered -Text "> SCRIPT TERMINATED <"; exit 1
-}
-Write-Glitchy -Text ">> Core library found. Assembling payload..."
-
-$initializerCode = @"
-// --- Activator for the 'Dynamic Chaos' sequence ---
-window.GlitchArt.run([
-    { func: window.GlitchArt.vibrate, delay: 4000 },
-    { func: window.GlitchArt.imageStack, delay: 8000 },
-    { func: window.GlitchArt.ghostCursor, delay: 7000 }
-]);
-document.body.addEventListener('click', function() { if (Math.random() < 0.20) window.GlitchArt.datamosh(); });
-setInterval(function() { if (Math.random() < 0.05) window.GlitchArt.datamosh(); }, 5000);
-"@
-$libraryContent = Get-Content -Path $EffectLibrary -Raw
-$finalPayload = $libraryContent + "`r`n`r`n" + $initializerCode
-$finalPayload | Out-File -FilePath $OutputFile -Encoding UTF8
-
-Write-Glitchy -Text ">> Payload written to '$OutputFile'."
-Write-Host ""
-
-$completeLine = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "   PROCESS COMPLETE   " + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
-Write-Centered -Text $completeLine -IsLogo
-
-Write-Host ""
-if ($choice -eq '1') {
-    Write-Glitchy -Text "[[ HOW TO USE ON A REAL WEBSITE ]]"
-    Write-Centered -Text "> 1. Open '$OutputFile' and copy its entire content."
-    Write-Centered -Text "> 2. Navigate to your target website in your browser."
-    Write-Centered -Text "> 3. Open Developer Tools (F12 or Ctrl+Shift+I)."
-    Write-Centered -Text "> 4. Go to the 'Console' tab."
-    Write-Centered -Text "> 5. Paste the code into the console and press Enter."
-}
-if ($choice -eq '2') {
-    if (Test-path $TestPage) {
-        $openChoice = Read-Host "> Open '$TestPage' to view the result? (y/n)"
-        if ($openChoice -eq 'y') { Write-Glitchy -Text ">> Launching ..."; Start-Process $TestPage }
-    } else {
-        Write-Glitchy -Text ">> NOTICE: Your test page '$TestPage' was not found."
-        Write-Centered -Text "> The payload '$OutputFile' was still created successfully."
+    '1' { 
+        Write-Host ""
+        Write-Glitchy -Text ">> MODE: REAL WEBSITE INJECTION"
+        
+        # Check if payload exists
+        if (-not (Test-Path $PayloadFile)) {
+            Write-Glitchy -Text "[[ FATAL ERROR ]]"
+            Write-Glitchy -Text "Payload file '$PayloadFile' not found."
+            Write-Centered -Text "> SCRIPT TERMINATED <"
+            exit 1
+        }
+        
+        # Check if injector.bat exists
+        if (-not (Test-Path $InjectorBatPath)) {
+            Write-Glitchy -Text "[[ FATAL ERROR ]]"
+            Write-Glitchy -Text "Injector script '$InjectorBatPath' not found."
+            Write-Centered -Text "> SCRIPT TERMINATED <"
+            exit 1
+        }
+        
+        Write-Host ""
+        $websiteUrl = Read-Host ">> Enter target website URL"
+        
+        if ([string]::IsNullOrWhiteSpace($websiteUrl)) {
+            Write-Glitchy -Text ">> ERROR: No URL provided"
+            Write-Centered -Text "> SCRIPT TERMINATED <"
+            exit 1
+        }
+        
+        Write-Glitchy -Text ">> Launching injector for: $websiteUrl"
+        Start-Process -FilePath $InjectorBatPath -ArgumentList $websiteUrl
+        
+        Write-Host ""
+        $completeLine = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "   INJECTOR LAUNCHED   " + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
+        Write-Centered -Text $completeLine -IsLogo
+    }
+    '2' { 
+        Write-Host ""
+        Write-Glitchy -Text ">> MODE: LOCAL TESTING"
+        
+        # Check if payload exists
+        if (-not (Test-Path $PayloadFile)) {
+            Write-Glitchy -Text "[[ FATAL ERROR ]]"
+            Write-Glitchy -Text "Payload file '$PayloadFile' not found."
+            Write-Centered -Text "> SCRIPT TERMINATED <"
+            exit 1
+        }
+        
+        Write-Host ""
+        $completeLine = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "   TEST READY   " + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
+        Write-Centered -Text $completeLine -IsLogo
+        
+        Write-Host ""
+        if (Test-Path $TestPage) {
+            $openChoice = Read-Host "> Open Test Page to view the result? (y/n)"
+            if ($openChoice -eq 'y') {
+                Write-Glitchy -Text ">> Launching ..."
+                Start-Process $TestPage
+            }
+        } else {
+            Write-Glitchy -Text ">> NOTICE: Test page not found."
+        }
+    }
+    default { 
+        Write-Host ""
+        Write-Glitchy -Text ">> ERROR: INVALID_SELECTION"
+        Write-Centered -Text "> SCRIPT TERMINATED <"
+        exit 1
     }
 }
+
 Write-Host ""

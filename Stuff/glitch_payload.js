@@ -1,17 +1,19 @@
-﻿/**
- * Glitch Art Effects Library
+/**
+ * Glitch Art Effects Payload
  * For Educational & Artistic Use Only
- * 
- * This file defines the functions for creating visual glitches but does not
- * activate them. It exposes a single global object: `window.GlitchArt`.
+ *
+ * This single file contains both the glitch effect library and the
+ * code that activates the effects immediately.
  */
+
+// --- 1. LIBRARY DEFINITION ---
 (function(window) {
     // Avoid re-injecting the library if it already exists
     if (window.GlitchArt) {
         return;
     }
 
-    // --- 1. Inject all necessary CSS styles into the page ---
+    // --- Inject all necessary CSS styles into the page ---
     const style = document.createElement('style');
     style.textContent = `
         @keyframes vibrate-subtle {
@@ -37,7 +39,7 @@
             transition: all 1.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s;
             opacity: 0;
         }
-        
+
         .datamosh-container { position: relative; overflow: hidden; }
         .datamosh-slice {
             position: absolute; width: 100%; height: 10px;
@@ -50,7 +52,7 @@
     `;
     document.head.appendChild(style);
 
-    // --- 2. Define the individual glitch effect functions ---
+    // --- Define the individual glitch effect functions ---
 
     const applyVibration = () => {
         const elements = document.body.querySelectorAll('div, p, h1, h2, span');
@@ -77,7 +79,7 @@
             }
         }, 500);
     };
-    
+
     const applyDatamosh = () => {
         const elements = document.body.querySelectorAll('div:not(:empty), section, main');
         if (elements.length === 0) return;
@@ -87,7 +89,7 @@
 
         const tempCanvas = document.createElement('canvas');
         document.body.appendChild(tempCanvas);
-        
+
         // Dynamically import html2canvas library from a CDN
         const script = document.createElement('script');
         script.src = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
@@ -137,7 +139,7 @@
         }, 2000);
     };
 
-    // --- 3. Expose the functions and a scheduler to the global scope ---
+    // --- Expose the functions and a scheduler to the global scope ---
     window.GlitchArt = {
         vibrate: applyVibration,
         imageStack: applyImageStack,
@@ -154,7 +156,8 @@
 
 })(window);
 
-// --- Activator for the 'Dynamic Chaos' sequence ---
+// --- 2. ACTIVATOR SEQUENCE ---
+// This part immediately runs the glitch effects using the library defined above.
 window.GlitchArt.run([
     { func: window.GlitchArt.vibrate, delay: 4000 },
     { func: window.GlitchArt.imageStack, delay: 8000 },
