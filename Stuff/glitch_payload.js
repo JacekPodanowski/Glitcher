@@ -9,10 +9,9 @@
  * - Added a "scroll reversal" effect to hijack user scrolling.
  * - All previous fixes (tab visibility, cursor hiding) are included.
  *
- * MODIFIED based on user request (v10 - Optimization Pass):
- * - Optimized DOM manipulation by using DocumentFragments to reduce browser reflows.
- * - Replaced Math.floor() with faster bitwise operators for integer conversion.
- * - Minor caching of variables for improved loop performance.
+ * MODIFIED based on user request (v11):
+ * - Stack Glitch layer count is now dynamic: 1 element (7-100), subset (7-30), all (7-14).
+ * - "Constant" mode now lasts longer (1.5s) and has wider spacing (2.5x multiplier).
  */
 
 (function(window) {
@@ -50,7 +49,8 @@
                 80% { transform: translate(calc(var(--glitch-dx) * -0.4 * var(--glitch-multiplier)), calc(var(--glitch-dy) * 0.7 * var(--glitch-multiplier))); } 
             }
             .glitch-stack-container { position: relative; display: inline-block; z-index: 1; }
-            .glitch-stack-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; filter: hue-rotate(var(--hue-shift, 0deg)) brightness(0.8); animation: stack-glitch 0.8s ease-in-out forwards; animation-delay: var(--delay, 0s); opacity: 1; }
+            /* MODIFICATION: Animation duration is now controlled by a CSS variable */
+            .glitch-stack-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; filter: hue-rotate(var(--hue-shift, 0deg)) brightness(0.8); animation: stack-glitch var(--glitch-duration, 0.8s) ease-in-out forwards; animation-delay: var(--delay, 0s); opacity: 1; }
             .glitch-image-container { position: relative; display: inline-block; overflow: visible; }
             .glitch-image-stack { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
             .glitch-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; mix-blend-mode: screen; opacity: 0.8; }
@@ -90,7 +90,8 @@
 
         const applyStackGlitch = () => {
             const elements = Array.from(document.body.querySelectorAll('p, h1, h2, h3, span, a, li, blockquote'));
-            if (elements.length === 0) return;
+            const totalElements = elements.length;
+            if (totalElements === 0) return;
 
             const angle = Math.random() * Math.PI * 2;
             const distance = 3 + Math.random() * 7;
@@ -101,13 +102,30 @@
             let numElements;
             const chance = Math.random();
             if (chance < 0.20) {
-                numElements = elements.length;
+                numElements = totalElements;
             } else if (chance < 0.70) {
-                numElements = ~~(elements.length * (0.2 + Math.random() * 0.3));
+                numElements = ~~(totalElements * (0.2 + Math.random() * 0.3));
             } else {
                 numElements = 1;
             }
 
+            // MODIFICATION: Set numLayers based on the number of elements being affected.
+            let numLayers;
+            if (numElements === 1) {
+                numLayers = ~~(Math.random() * 94) + 20; // 7 to 100
+            } else if (numElements === totalElements) {
+                numLayers = ~~(Math.random() * 8) + 7;  // 7 to 14
+            } else {
+                numLayers = ~~(Math.random() * 20) + 7; // 7 to 30
+            }
+
+            // MODIFICATION: Define variables for the mode's behavior
+            let duration = 880;
+            let multiplierBase = 2.5; // This will be used if not progressive
+            if (!isProgressive) {
+                duration = 1200;       // Longer duration for constant mode
+            }
+            
             const shuffled = elements.sort(() => 0.5 - Math.random());
             const selected = shuffled.slice(0, numElements);
             
@@ -119,26 +137,23 @@
                 wrapper.className = 'glitch-stack-container';
                 el.parentNode.insertBefore(wrapper, el);
                 wrapper.appendChild(el);
-
-                const numLayers = ~~(Math.random() * 20) + 3;
-                // OPTIMIZATION: Use a DocumentFragment to batch DOM appends
-                const fragment = document.createDocumentFragment();
                 
+                const fragment = document.createDocumentFragment();
                 for (let i = 1; i <= numLayers; i++) {
                     const clone = el.cloneNode(true);
                     clone.classList.add('glitch-stack-layer');
-                    const cloneStyle = clone.style; // Cache style object
+                    const cloneStyle = clone.style;
                     cloneStyle.setProperty('--glitch-dx', `${dx}px`);
                     cloneStyle.setProperty('--glitch-dy', `${dy}px`);
-                    const multiplier = isProgressive ? i * 0.2 : 1.5;
+                    const multiplier = isProgressive ? i * 0.2 : multiplierBase;
                     cloneStyle.setProperty('--glitch-multiplier', multiplier);
-                    cloneStyle.setProperty('--delay', `${i * 0.02}s`);
+                    cloneStyle.setProperty('--delay', `${i * 0.03}s`);
                     cloneStyle.setProperty('--hue-shift', `${~~(Math.random() * 360)}deg`);
+                    cloneStyle.setProperty('--glitch-duration', `${duration / 1000}s`); // Set duration
                     cloneStyle.zIndex = i;
                     fragment.appendChild(clone);
                 }
                 
-                // Append all clones at once
                 wrapper.appendChild(fragment);
 
                 setTimeout(() => {
@@ -146,7 +161,7 @@
                         wrapper.parentNode.insertBefore(el, wrapper);
                         wrapper.parentNode.removeChild(wrapper);
                     }
-                }, 880); 
+                }, duration); // Use the mode-specific duration for cleanup
             });
         };
 
@@ -168,7 +183,6 @@
 
             const stack = document.createElement('div');
             stack.className = 'glitch-image-stack';
-            // OPTIMIZATION: Use a DocumentFragment for the layers
             const fragment = document.createDocumentFragment();
             for (let i = 1; i <= 3; i++) {
                 const layer = document.createElement('div');
@@ -209,7 +223,6 @@
                 const container = document.createElement('div');
                 container.style.cssText = `position: fixed; z-index: 9999; top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px; pointer-events: none;`;
                 
-                // OPTIMIZATION: Use a DocumentFragment for slices
                 const fragment = document.createDocumentFragment();
                 for (let i = 0, h = rect.height; i < h; i += 10) {
                     const slice = document.createElement('div');
@@ -487,15 +500,14 @@
 
         function glitchLoop(currentTime) {
             animationFrameId = requestAnimationFrame(glitchLoop);
-            if (currentTime - lastFrameTime < 1000) {
-                return;
-            }
+            if (currentTime - lastFrameTime < 1000) return;
+            
             lastFrameTime = currentTime;
             
-            // OPTIMIZATION: Cache object keys for faster iteration
             const effectKeys = Object.keys(effectConfig);
             for (let i = 0, len = effectKeys.length; i < len; i++) {
-                const effect = effectConfig[effectKeys[i]];
+                const key = effectKeys[i];
+                const effect = effectConfig[key];
                 if (currentTime - effect.lastRun > effect.cooldown) {
                     if (Math.random() < effect.chance) {
                         effect.func();
