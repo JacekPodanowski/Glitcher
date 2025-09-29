@@ -1,5 +1,5 @@
 /**
- * Enhanced Glitch Art Effects Payload
+ * Enhanced Glitch Art Effects Payload v3
  * For Educational & Artistic Use Only
  *
  * This single file contains both the glitch effect library and the
@@ -16,23 +16,32 @@
     // --- Inject all necessary CSS styles into the page ---
     const style = document.createElement('style');
     style.textContent = `
-        @keyframes vibrate-intense {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            10% { transform: translate(-3px, 2px) rotate(-1deg); }
-            20% { transform: translate(3px, -2px) rotate(1deg); }
-            30% { transform: translate(-2px, -3px) rotate(-0.5deg); }
-            40% { transform: translate(2px, 3px) rotate(0.5deg); }
-            50% { transform: translate(-3px, -2px) rotate(-1deg); }
-            60% { transform: translate(3px, 2px) rotate(1deg); }
-            70% { transform: translate(-2px, 3px) rotate(-0.5deg); }
-            80% { transform: translate(2px, -3px) rotate(0.5deg); }
-            90% { transform: translate(-3px, 2px) rotate(-1deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
+        /* REPLACED: Vertical stacking glitch effect instead of vibration */
+        @keyframes stack-glitch {
+            0% { transform: translateY(0); opacity: 1; }
+            20% { transform: translateY(5px); opacity: 0.9; }
+            40% { transform: translateY(10px); opacity: 0.8; }
+            60% { transform: translateY(15px); opacity: 0.7; }
+            80% { transform: translateY(20px); opacity: 0.6; }
+            100% { transform: translateY(25px); opacity: 0.5; }
         }
-        .glitch-vibrate { 
-            animation: vibrate-intense 0.3s linear;
+
+        .glitch-stack-container {
             position: relative;
-            z-index: 10;
+            display: inline-block;
+        }
+
+        .glitch-stack-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            filter: hue-rotate(var(--hue-shift, 0deg)) brightness(0.8);
+            animation: stack-glitch 0.8s ease-out forwards;
+            animation-delay: var(--delay, 0s);
         }
 
         .glitch-image-container {
@@ -135,9 +144,9 @@
             clip-path: polygon(0 0, 0 16px, 6px 12px, 9px 20px, 11px 19px, 8px 11px, 16px 11px);
             z-index: 2147483647;
             pointer-events: none;
-            transition: all 0.15s ease-out;
             opacity: 0;
             transform: translate(-2px, -2px);
+            will-change: transform, opacity;
         }
 
         .fake-cursor.active {
@@ -167,22 +176,184 @@
         @keyframes datamosh-shift {
             50% { transform: translateX(calc(var(--rand-shift, 0) * 30px - 15px)); }
         }
+
+        /* RGB Split */
+        .rgb-split-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999999;
+            animation: rgb-split-anim 0.6s ease-in-out;
+        }
+
+        @keyframes rgb-split-anim {
+            0%, 100% { opacity: 0; }
+            10%, 90% { opacity: 1; }
+        }
+
+        .rgb-channel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .rgb-channel-r {
+            mix-blend-mode: screen;
+            filter: sepia(1) hue-rotate(310deg) saturate(6);
+            animation: rgb-r 0.6s infinite;
+        }
+
+        .rgb-channel-g {
+            mix-blend-mode: screen;
+            filter: sepia(1) hue-rotate(90deg) saturate(4);
+            animation: rgb-g 0.6s infinite;
+        }
+
+        .rgb-channel-b {
+            mix-blend-mode: screen;
+            filter: sepia(1) hue-rotate(180deg) saturate(5);
+            animation: rgb-b 0.6s infinite;
+        }
+
+        @keyframes rgb-r {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(-15px, 3px); }
+            66% { transform: translate(-10px, -5px); }
+        }
+
+        @keyframes rgb-g {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(3px, 8px); }
+            66% { transform: translate(-2px, 12px); }
+        }
+
+        @keyframes rgb-b {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(12px, -4px); }
+            66% { transform: translate(15px, 2px); }
+        }
+
+        /* ENHANCED: Stronger Text Corruption */
+        .text-corrupt {
+            position: relative;
+            display: inline-block;
+        }
+
+        .text-corrupt::before,
+        .text-corrupt::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .text-corrupt::before {
+            left: 6px;
+            text-shadow: -4px 0 #ff00ff, 2px 2px #ff0000;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: corrupt-anim-1 0.3s infinite linear alternate-reverse;
+        }
+
+        .text-corrupt::after {
+            left: -6px;
+            text-shadow: -4px 0 #00ffff, -2px 2px #00ff00;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: corrupt-anim-2 0.3s infinite linear alternate-reverse;
+        }
+
+        @keyframes corrupt-anim-1 {
+            0% { clip: rect(42px, 9999px, 44px, 0); left: 8px; }
+            10% { clip: rect(12px, 9999px, 59px, 0); left: -6px; }
+            20% { clip: rect(66px, 9999px, 89px, 0); left: 10px; }
+            30% { clip: rect(17px, 9999px, 34px, 0); left: -8px; }
+            40% { clip: rect(87px, 9999px, 40px, 0); left: 12px; }
+            50% { clip: rect(50px, 9999px, 75px, 0); left: -10px; }
+            60% { clip: rect(23px, 9999px, 55px, 0); left: 9px; }
+            70% { clip: rect(70px, 9999px, 95px, 0); left: -7px; }
+            80% { clip: rect(8px, 9999px, 28px, 0); left: 11px; }
+            90% { clip: rect(45px, 9999px, 60px, 0); left: -9px; }
+            100% { clip: rect(32px, 9999px, 48px, 0); left: 8px; }
+        }
+
+        @keyframes corrupt-anim-2 {
+            0% { clip: rect(65px, 9999px, 100px, 0); left: -10px; }
+            10% { clip: rect(25px, 9999px, 45px, 0); left: 8px; }
+            20% { clip: rect(78px, 9999px, 88px, 0); left: -12px; }
+            30% { clip: rect(5px, 9999px, 15px, 0); left: 9px; }
+            40% { clip: rect(52px, 9999px, 72px, 0); left: -8px; }
+            50% { clip: rect(38px, 9999px, 58px, 0); left: 11px; }
+            60% { clip: rect(82px, 9999px, 92px, 0); left: -9px; }
+            70% { clip: rect(15px, 9999px, 35px, 0); left: 10px; }
+            80% { clip: rect(60px, 9999px, 80px, 0); left: -11px; }
+            90% { clip: rect(28px, 9999px, 48px, 0); left: 8px; }
+            100% { clip: rect(70px, 9999px, 85px, 0); left: -10px; }
+        }
     `;
     document.head.appendChild(style);
 
     // --- Define the individual glitch effect functions ---
 
-    const applyVibration = () => {
-        const elements = document.body.querySelectorAll('div, p, h1, h2, h3, span, button, a, section, article');
+    // REPLACED: Stack glitch effect instead of vibration
+    const applyStackGlitch = () => {
+        const elements = Array.from(document.body.querySelectorAll('div, p, h1, h2, h3, span, button, a, section, article, header, nav, main, aside, footer'));
         if (elements.length === 0) return;
         
-        // Pick 1-3 random elements
-        const count = Math.floor(Math.random() * 3) + 1;
-        for (let i = 0; i < count; i++) {
-            const el = elements[Math.floor(Math.random() * elements.length)];
-            el.classList.add('glitch-vibrate');
-            setTimeout(() => el.classList.remove('glitch-vibrate'), 300);
+        // Random number of elements: 1-5, or sometimes ALL elements
+        let numElements;
+        const allElementsChance = Math.random();
+        
+        if (allElementsChance < 0.15) {
+            // 15% chance: affect ALL elements
+            numElements = elements.length;
+        } else if (allElementsChance < 0.35) {
+            // 20% chance: affect many elements (20-50% of all)
+            numElements = Math.floor(elements.length * (0.2 + Math.random() * 0.3));
+        } else {
+            // 65% chance: affect 1-8 elements
+            numElements = Math.floor(Math.random() * 8) + 1;
         }
+        
+        // Shuffle and select elements
+        const shuffled = elements.sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, numElements);
+        
+        selected.forEach(el => {
+            // Skip if too small
+            const rect = el.getBoundingClientRect();
+            if (rect.width < 20 || rect.height < 20) return;
+            
+            // Number of stack layers: 3-7
+            const numLayers = Math.floor(Math.random() * 5) + 3;
+            
+            // Clone the element multiple times
+            for (let i = 1; i <= numLayers; i++) {
+                const clone = el.cloneNode(true);
+                clone.classList.add('glitch-stack-layer');
+                clone.style.setProperty('--delay', `${i * 0.08}s`);
+                clone.style.setProperty('--hue-shift', `${Math.random() * 360}deg`);
+                clone.style.zIndex = parseInt(getComputedStyle(el).zIndex || 0) - i;
+                
+                // Insert clone right after original
+                el.parentNode.insertBefore(clone, el.nextSibling);
+                
+                // Remove clone after animation
+                setTimeout(() => {
+                    if (clone.parentNode) {
+                        clone.parentNode.removeChild(clone);
+                    }
+                }, 800 + (i * 80));
+            }
+        });
     };
 
     const applyImageStack = () => {
@@ -286,92 +457,237 @@
         }).catch(err => console.log('Datamosh error:', err));
     };
 
+    // Bezier curve calculation for smooth cursor movement
+    const bezierPoint = (t, p0, p1, p2, p3) => {
+        const u = 1 - t;
+        const tt = t * t;
+        const uu = u * u;
+        const uuu = uu * u;
+        const ttt = tt * t;
+        
+        return {
+            x: uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x,
+            y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y
+        };
+    };
+
+    // MODIFIED: Ghost cursor starts from actual cursor position
     const animateGhostCursor = () => {
-        const elements = document.querySelectorAll('a, button, h1, h2, h3, p, img, input, textarea, [role="button"]');
+        const elements = document.querySelectorAll('a, button, h1, h2, h3, p, img, input, textarea, [role="button"], span');
         if (elements.length < 2) return;
         
         const cursor = document.createElement('div');
         cursor.className = 'fake-cursor';
         document.body.appendChild(cursor);
         
-        // Start position - random element
-        const startEl = elements[Math.floor(Math.random() * elements.length)];
-        const startRect = startEl.getBoundingClientRect();
-        cursor.style.top = `${startRect.top + startRect.height / 2}px`;
-        cursor.style.left = `${startRect.left + startRect.width / 2}px`;
+        // Store the real cursor position when effect starts
+        let realCursorX = window.lastMouseX || window.innerWidth / 2;
+        let realCursorY = window.lastMouseY || window.innerHeight / 2;
         
-        setTimeout(() => cursor.classList.add('active'), 50);
+        // Track real cursor position
+        const updateRealCursor = (e) => {
+            window.lastMouseX = e.clientX;
+            window.lastMouseY = e.clientY;
+        };
+        document.addEventListener('mousemove', updateRealCursor);
         
-        // Create a natural path with 2-4 waypoints
+        // Start position - current cursor location
+        let currentPos = {
+            x: realCursorX,
+            y: realCursorY
+        };
+        
+        cursor.style.top = `${currentPos.y}px`;
+        cursor.style.left = `${currentPos.x}px`;
+        
+        setTimeout(() => cursor.classList.add('active'), 100);
+        
+        // Create waypoints
+        const numWaypoints = Math.floor(Math.random() * 2) + 2; // 2-3 waypoints
         const waypoints = [];
-        const numWaypoints = Math.floor(Math.random() * 3) + 2;
         
         for (let i = 0; i < numWaypoints; i++) {
             const el = elements[Math.floor(Math.random() * elements.length)];
             const rect = el.getBoundingClientRect();
             waypoints.push({
-                x: rect.left + rect.width / 2 + (Math.random() * 20 - 10),
-                y: rect.top + rect.height / 2 + (Math.random() * 20 - 10),
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2,
                 element: el
             });
         }
         
         let currentWaypoint = 0;
+        
         const moveToNextWaypoint = () => {
             if (currentWaypoint >= waypoints.length) {
-                // Fade out and remove
                 cursor.classList.remove('active');
                 setTimeout(() => {
                     if (document.body.contains(cursor)) {
                         document.body.removeChild(cursor);
                     }
-                }, 200);
+                    document.removeEventListener('mousemove', updateRealCursor);
+                }, 300);
                 return;
             }
             
-            const wp = waypoints[currentWaypoint];
-            cursor.style.top = `${wp.y}px`;
-            cursor.style.left = `${wp.x}px`;
+            const targetPos = waypoints[currentWaypoint];
             
-            // Highlight text effect
-            if (wp.element.innerText && Math.random() < 0.5) {
-                setTimeout(() => {
-                    const range = document.createRange();
-                    const selection = window.getSelection();
+            // Create bezier curve control points for natural movement
+            const p0 = currentPos;
+            const p3 = targetPos;
+            
+            // Control points create the curve
+            const dx = p3.x - p0.x;
+            const dy = p3.y - p0.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            const p1 = {
+                x: p0.x + dx * 0.25 + (Math.random() - 0.5) * dist * 0.3,
+                y: p0.y + dy * 0.25 + (Math.random() - 0.5) * dist * 0.3
+            };
+            
+            const p2 = {
+                x: p0.x + dx * 0.75 + (Math.random() - 0.5) * dist * 0.3,
+                y: p0.y + dy * 0.75 + (Math.random() - 0.5) * dist * 0.3
+            };
+            
+            // Animate along bezier curve
+            const duration = 2000; // 2 seconds for each movement
+            const steps = 60;
+            let step = 0;
+            
+            const animate = () => {
+                if (step >= steps) {
+                    currentPos = targetPos;
                     
-                    try {
-                        const textNode = wp.element.childNodes[0];
-                        if (textNode && textNode.nodeType === 3) {
-                            const len = textNode.textContent.length;
-                            const start = Math.floor(Math.random() * (len / 2));
-                            const end = Math.min(start + Math.floor(Math.random() * (len / 2)) + 5, len);
+                    // MODIFIED: Only 20% chance to highlight text
+                    if (Math.random() < 0.2 && targetPos.element.innerText) {
+                        setTimeout(() => {
+                            const range = document.createRange();
+                            const selection = window.getSelection();
                             
-                            range.setStart(textNode, start);
-                            range.setEnd(textNode, end);
-                            selection.removeAllRanges();
-                            selection.addRange(range);
-                            
-                            setTimeout(() => selection.removeAllRanges(), 400);
-                        }
-                    } catch (e) {
-                        // Ignore selection errors
+                            try {
+                                const textNode = targetPos.element.childNodes[0];
+                                if (textNode && textNode.nodeType === 3) {
+                                    const len = textNode.textContent.length;
+                                    const start = Math.floor(Math.random() * (len / 2));
+                                    const end = Math.min(start + Math.floor(Math.random() * (len / 2)) + 5, len);
+                                    
+                                    range.setStart(textNode, start);
+                                    range.setEnd(textNode, end);
+                                    selection.removeAllRanges();
+                                    selection.addRange(range);
+                                    
+                                    setTimeout(() => selection.removeAllRanges(), 800);
+                                }
+                            } catch (e) {
+                                // Ignore selection errors
+                            }
+                        }, 100);
+                    } else {
+                        // 80% chance: Trigger hover effect instead
+                        const hoverEvent = new MouseEvent('mouseenter', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                        });
+                        targetPos.element.dispatchEvent(hoverEvent);
+                        
+                        // Add :hover class simulation if needed
+                        targetPos.element.classList.add('fake-hover');
+                        
+                        setTimeout(() => {
+                            const leaveEvent = new MouseEvent('mouseleave', {
+                                bubbles: true,
+                                cancelable: true,
+                                view: window
+                            });
+                            targetPos.element.dispatchEvent(leaveEvent);
+                            targetPos.element.classList.remove('fake-hover');
+                        }, 800);
                     }
-                }, 200);
-            }
+                    
+                    currentWaypoint++;
+                    setTimeout(moveToNextWaypoint, 1200);
+                    return;
+                }
+                
+                const t = step / steps;
+                const pos = bezierPoint(t, p0, p1, p2, p3);
+                
+                cursor.style.left = `${pos.x}px`;
+                cursor.style.top = `${pos.y}px`;
+                
+                step++;
+                requestAnimationFrame(animate);
+            };
             
-            currentWaypoint++;
-            setTimeout(moveToNextWaypoint, 800 + Math.random() * 600);
+            animate();
         };
         
-        setTimeout(moveToNextWaypoint, 300);
+        setTimeout(moveToNextWaypoint, 400);
     };
+
+    // RGB Split on entire viewport
+    const applyRGBSplit = () => {
+        const container = document.createElement('div');
+        container.className = 'rgb-split-container';
+        
+        // Capture current viewport
+        html2canvas(document.body, {
+            logging: false,
+            useCORS: true,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            x: window.scrollX,
+            y: window.scrollY
+        }).then(canvas => {
+            const imgData = canvas.toDataURL();
+            
+            ['r', 'g', 'b'].forEach(channel => {
+                const layer = document.createElement('div');
+                layer.className = `rgb-channel rgb-channel-${channel}`;
+                layer.style.backgroundImage = `url(${imgData})`;
+                container.appendChild(layer);
+            });
+            
+            document.body.appendChild(container);
+            
+            setTimeout(() => {
+                if (document.body.contains(container)) {
+                    document.body.removeChild(container);
+                }
+            }, 600);
+        }).catch(err => console.log('RGB Split error:', err));
+    };
+
+    // Text Corruption (already enhanced in CSS)
+    const applyTextCorruption = () => {
+        const textElements = document.querySelectorAll('h1, h2, h3, p, a, button, span, li');
+        if (textElements.length === 0) return;
+        
+        const el = textElements[Math.floor(Math.random() * textElements.length)];
+        if (!el.innerText || el.innerText.length < 3) return;
+        
+        const originalHTML = el.innerHTML;
+        el.setAttribute('data-text', el.innerText);
+        el.classList.add('text-corrupt');
+        
+        setTimeout(() => {
+                    el.classList.remove('text-corrupt');
+                    el.removeAttribute('data-text');
+                    el.innerHTML = originalHTML;
+                }, 500);
+            };
 
     // --- Expose the functions and a scheduler to the global scope ---
     window.GlitchArt = {
-        vibrate: applyVibration,
+        stackGlitch: applyStackGlitch,  // RENAMED from vibrate
         imageStack: applyImageStack,
         datamosh: applyDatamosh,
         ghostCursor: animateGhostCursor,
+        rgbSplit: applyRGBSplit,
+        textCorrupt: applyTextCorruption,
 
         run: function(config) {
             console.log('GlitchArt sequence activated.');
@@ -386,15 +702,17 @@
 // --- 2. ACTIVATOR SEQUENCE ---
 // This part immediately runs the glitch effects using the library defined above.
 window.GlitchArt.run([
-    { func: window.GlitchArt.vibrate, delay: 3000 },
-    { func: window.GlitchArt.imageStack, delay: 5000 },
-    { func: window.GlitchArt.ghostCursor, delay: 8000 }
+    { func: window.GlitchArt.stackGlitch, delay: 8000 },      // UPDATED: Stack glitch effect
+    { func: window.GlitchArt.imageStack, delay: 6000 },       // Beautiful image glitch
+    { func: window.GlitchArt.ghostCursor, delay: 12000 },     // Ghost cursor from real position
+    { func: window.GlitchArt.rgbSplit, delay: 15000 },        // Full screen RGB split
+    { func: window.GlitchArt.textCorrupt, delay: 7000 }       // Enhanced text corruption
 ]);
 
-document.body.addEventListener('click', function() { 
-    if (Math.random() < 0.20) window.GlitchArt.datamosh(); 
+document.body.addEventListener('click', function() {
+    if (Math.random() < 0.15) window.GlitchArt.datamosh();
 });
 
-setInterval(function() { 
-    if (Math.random() < 0.05) window.GlitchArt.datamosh(); 
+setInterval(function() {
+    if (Math.random() < 0.05) window.GlitchArt.datamosh();
 }, 5000);
