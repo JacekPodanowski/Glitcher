@@ -9,10 +9,10 @@
  * - Added a "scroll reversal" effect to hijack user scrolling.
  * - All previous fixes (tab visibility, cursor hiding) are included.
  *
- * MODIFIED based on user request (v9):
- * - Added a new "Typing Glitch" that activates on text fields.
- * - Randomly inserts strange characters or jumps the cursor back as the user types.
- * - Tab visibility logic now creates a "moment of peace" upon returning.
+ * MODIFIED based on user request (v10 - Optimization Pass):
+ * - Optimized DOM manipulation by using DocumentFragments to reduce browser reflows.
+ * - Replaced Math.floor() with faster bitwise operators for integer conversion.
+ * - Minor caching of variables for improved loop performance.
  */
 
 (function(window) {
@@ -103,12 +103,12 @@
             if (chance < 0.20) {
                 numElements = elements.length;
             } else if (chance < 0.70) {
-                numElements = Math.floor(elements.length * (0.2 + Math.random() * 0.3));
+                numElements = ~~(elements.length * (0.2 + Math.random() * 0.3));
             } else {
                 numElements = 1;
             }
 
-            const shuffled = elements.sort(() => Math.random() - 0.5);
+            const shuffled = elements.sort(() => 0.5 - Math.random());
             const selected = shuffled.slice(0, numElements);
             
             selected.forEach(el => {
@@ -120,20 +120,26 @@
                 el.parentNode.insertBefore(wrapper, el);
                 wrapper.appendChild(el);
 
-                const numLayers = Math.floor(Math.random() * 20) + 3;
+                const numLayers = ~~(Math.random() * 20) + 3;
+                // OPTIMIZATION: Use a DocumentFragment to batch DOM appends
+                const fragment = document.createDocumentFragment();
                 
                 for (let i = 1; i <= numLayers; i++) {
                     const clone = el.cloneNode(true);
                     clone.classList.add('glitch-stack-layer');
-                    clone.style.setProperty('--glitch-dx', `${dx}px`);
-                    clone.style.setProperty('--glitch-dy', `${dy}px`);
+                    const cloneStyle = clone.style; // Cache style object
+                    cloneStyle.setProperty('--glitch-dx', `${dx}px`);
+                    cloneStyle.setProperty('--glitch-dy', `${dy}px`);
                     const multiplier = isProgressive ? i * 0.2 : 1.5;
-                    clone.style.setProperty('--glitch-multiplier', multiplier);
-                    clone.style.setProperty('--delay', `${i * 0.02}s`);
-                    clone.style.setProperty('--hue-shift', `${Math.random() * 360}deg`);
-                    clone.style.zIndex = i;
-                    wrapper.appendChild(clone);
+                    cloneStyle.setProperty('--glitch-multiplier', multiplier);
+                    cloneStyle.setProperty('--delay', `${i * 0.02}s`);
+                    cloneStyle.setProperty('--hue-shift', `${~~(Math.random() * 360)}deg`);
+                    cloneStyle.zIndex = i;
+                    fragment.appendChild(clone);
                 }
+                
+                // Append all clones at once
+                wrapper.appendChild(fragment);
 
                 setTimeout(() => {
                     if (wrapper.parentNode) {
@@ -146,39 +152,48 @@
 
         const applyImageStack = () => {
             const images = document.querySelectorAll('img');
-            if (images.length === 0) return;
-            const img = images[Math.floor(Math.random() * images.length)];
+            const numImages = images.length;
+            if (numImages === 0) return;
+
+            const img = images[~~(Math.random() * numImages)];
             const wrapper = document.createElement('div');
             wrapper.className = 'glitch-image-container';
-            wrapper.style.display = getComputedStyle(img).display || 'inline-block';
-            wrapper.style.width = img.width + 'px';
-            wrapper.style.height = img.height + 'px';
+            const wrapperStyle = wrapper.style;
+            wrapperStyle.display = getComputedStyle(img).display || 'inline-block';
+            wrapperStyle.width = img.width + 'px';
+            wrapperStyle.height = img.height + 'px';
+            
             img.parentNode.insertBefore(wrapper, img);
             wrapper.appendChild(img);
+
             const stack = document.createElement('div');
             stack.className = 'glitch-image-stack';
+            // OPTIMIZATION: Use a DocumentFragment for the layers
+            const fragment = document.createDocumentFragment();
             for (let i = 1; i <= 3; i++) {
                 const layer = document.createElement('div');
                 layer.className = `glitch-layer glitch-layer-${i}`;
                 layer.style.backgroundImage = `url(${img.src})`;
-                stack.appendChild(layer);
+                fragment.appendChild(layer);
             }
+            stack.appendChild(fragment);
             wrapper.appendChild(stack);
+
             if (Math.random() < 0.5) {
                 img.classList.add('glitch-invert');
             }
-            if (images.length > 1 && Math.random() < 0.6) {
-                const otherImg = images[Math.floor(Math.random() * images.length)];
+
+            if (numImages > 1 && Math.random() < 0.6) {
+                const otherImg = images[~~(Math.random() * numImages)];
                 if (otherImg !== img) {
                     const originalSrc = img.src;
                     setTimeout(() => {
                         img.src = otherImg.src;
-                        setTimeout(() => {
-                            img.src = originalSrc;
-                        }, 250);
+                        setTimeout(() => { img.src = originalSrc; }, 250);
                     }, 150);
                 }
             }
+
             setTimeout(() => {
                 img.classList.remove('glitch-invert');
                 if (wrapper.parentNode) {
@@ -193,16 +208,22 @@
                 const imgData = canvas.toDataURL();
                 const container = document.createElement('div');
                 container.style.cssText = `position: fixed; z-index: 9999; top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px; pointer-events: none;`;
-                document.body.appendChild(container);
-                for (let i = 0; i < rect.height; i += 10) {
+                
+                // OPTIMIZATION: Use a DocumentFragment for slices
+                const fragment = document.createDocumentFragment();
+                for (let i = 0, h = rect.height; i < h; i += 10) {
                     const slice = document.createElement('div');
                     slice.classList.add('datamosh-slice');
-                    slice.style.top = `${i}px`;
-                    slice.style.backgroundImage = `url(${imgData})`;
-                    slice.style.backgroundPosition = `0px -${i}px`;
-                    slice.style.setProperty('--rand-shift', Math.random());
-                    container.appendChild(slice);
+                    const sliceStyle = slice.style;
+                    sliceStyle.top = `${i}px`;
+                    sliceStyle.backgroundImage = `url(${imgData})`;
+                    sliceStyle.backgroundPosition = `0px -${i}px`;
+                    sliceStyle.setProperty('--rand-shift', Math.random());
+                    fragment.appendChild(slice);
                 }
+                container.appendChild(fragment);
+                document.body.appendChild(container);
+
                 setTimeout(() => {
                     if (document.body.contains(container)) {
                         document.body.removeChild(container);
@@ -214,28 +235,32 @@
         const applyDatamosh = () => {
             const elements = document.body.querySelectorAll('div:not(:empty), section, main, article');
             if (elements.length === 0) return;
-            const target = elements[Math.floor(Math.random() * elements.length)];
+            const target = elements[~~(Math.random() * elements.length)];
             const rect = target.getBoundingClientRect();
             if (rect.height < 50 || rect.width < 50) return;
             executeDatamosh(target, rect);
         };
 
         const applyRGBSplit = () => {
-            const container = document.createElement('div');
-            container.className = 'rgb-split-container';
             html2canvas(document.body, {
                 logging: false, useCORS: true,
                 width: window.innerWidth, height: window.innerHeight,
                 x: window.scrollX, y: window.scrollY
             }).then(canvas => {
                 const imgData = canvas.toDataURL();
+                const container = document.createElement('div');
+                container.className = 'rgb-split-container';
+
+                const fragment = document.createDocumentFragment();
                 ['r', 'g', 'b'].forEach(channel => {
                     const layer = document.createElement('div');
                     layer.className = `rgb-channel rgb-channel-${channel}`;
                     layer.style.backgroundImage = `url(${imgData})`;
-                    container.appendChild(layer);
+                    fragment.appendChild(layer);
                 });
+                container.appendChild(fragment);
                 document.body.appendChild(container);
+
                 setTimeout(() => {
                     if (document.body.contains(container)) {
                         document.body.removeChild(container);
@@ -247,7 +272,7 @@
         const applyTextCorruption = () => {
             const textElements = document.querySelectorAll('h1, h2, h3, p, a, button, span, li');
             if (textElements.length === 0) return;
-            const el = textElements[Math.floor(Math.random() * textElements.length)];
+            const el = textElements[~~(Math.random() * textElements.length)];
             if (!el.innerText || el.innerText.length < 3) return;
             const originalHTML = el.innerHTML;
             el.setAttribute('data-text', el.innerText);
@@ -260,12 +285,13 @@
         };
         
         const bezierPoint = (t, p0, p1, p2, p3) => {
-            const u = 1 - t; const tt = t * t; const uu = u * u;
-            const uuu = uu * u; const ttt = tt * t;
-            return {
+            const u = 1 - t, tt = t * t, uu = u * u;
+            const uuu = uu * u, ttt = tt * t;
+            const p = {
                 x: uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x,
                 y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y
             };
+            return p;
         };
 
         const animateGhostCursor = () => {
@@ -288,14 +314,15 @@
             document.addEventListener('mousemove', updateRealCursor);
 
             let currentPos = { x: realCursorX, y: realCursorY };
-            cursor.style.top = `${currentPos.y}px`;
-            cursor.style.left = `${currentPos.x}px`;
+            const cursorStyle = cursor.style;
+            cursorStyle.top = `${currentPos.y}px`;
+            cursorStyle.left = `${currentPos.x}px`;
             setTimeout(() => cursor.classList.add('active'), 100);
 
-            const numWaypoints = Math.floor(Math.random() * 2) + 2;
+            const numWaypoints = ~~(Math.random() * 2) + 2;
             const waypoints = [];
             for (let i = 0; i < numWaypoints; i++) {
-                const el = elements[Math.floor(Math.random() * elements.length)];
+                const el = elements[~~(Math.random() * elements.length)];
                 const rect = el.getBoundingClientRect();
                 waypoints.push({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, element: el });
             }
@@ -318,30 +345,26 @@
                 }
 
                 const targetPos = waypoints[currentWaypoint];
-                const p0 = currentPos;
-                const p3 = targetPos;
-                const dx = p3.x - p0.x;
-                const dy = p3.y - p0.y;
+                const p0 = currentPos, p3 = targetPos;
+                const dx = p3.x - p0.x, dy = p3.y - p0.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 const p1 = { x: p0.x + dx * 0.25 + (Math.random() - 0.5) * dist * 0.3, y: p0.y + dy * 0.25 + (Math.random() - 0.5) * dist * 0.3 };
                 const p2 = { x: p0.x + dx * 0.75 + (Math.random() - 0.5) * dist * 0.3, y: p0.y + dy * 0.75 + (Math.random() - 0.5) * dist * 0.3 };
-                const duration = 2000;
-                const steps = 60;
+                
                 let step = 0;
-
                 const animate = () => {
-                    if (step >= steps) {
+                    if (step >= 60) {
                         currentPos = targetPos;
-                        if (Math.random() < 0.2 && targetPos.element.innerText) {
+                        const targetEl = targetPos.element;
+                        if (Math.random() < 0.2 && targetEl.innerText) {
                             setTimeout(() => {
-                                const range = document.createRange();
-                                const selection = window.getSelection();
+                                const range = document.createRange(), selection = window.getSelection();
                                 try {
-                                    const textNode = targetPos.element.childNodes[0];
+                                    const textNode = targetEl.childNodes[0];
                                     if (textNode && textNode.nodeType === 3) {
                                         const len = textNode.textContent.length;
-                                        const start = Math.floor(Math.random() * (len / 2));
-                                        const end = Math.min(start + Math.floor(Math.random() * (len / 2)) + 5, len);
+                                        const start = ~~(Math.random() * (len / 2));
+                                        const end = Math.min(start + ~~(Math.random() * (len / 2)) + 5, len);
                                         range.setStart(textNode, start);
                                         range.setEnd(textNode, end);
                                         selection.removeAllRanges();
@@ -351,23 +374,21 @@
                                 } catch (e) {}
                             }, 100);
                         } else {
-                            const hoverEvent = new MouseEvent('mouseenter', { bubbles: true, cancelable: true, view: window });
-                            targetPos.element.dispatchEvent(hoverEvent);
-                            targetPos.element.classList.add('fake-hover');
+                            targetEl.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+                            targetEl.classList.add('fake-hover');
                             setTimeout(() => {
-                                const leaveEvent = new MouseEvent('mouseleave', { bubbles: true, cancelable: true, view: window });
-                                targetPos.element.dispatchEvent(leaveEvent);
-                                targetPos.element.classList.remove('fake-hover');
+                                targetEl.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+                                targetEl.classList.remove('fake-hover');
                             }, 800);
                         }
                         currentWaypoint++;
                         setTimeout(moveToNextWaypoint, 1200);
                         return;
                     }
-                    const t = step / steps;
+                    const t = step / 60;
                     const pos = bezierPoint(t, p0, p1, p2, p3);
-                    cursor.style.left = `${pos.x}px`;
-                    cursor.style.top = `${pos.y}px`;
+                    cursorStyle.left = `${pos.x}px`;
+                    cursorStyle.top = `${pos.y}px`;
                     step++;
                     requestAnimationFrame(animate);
                 };
@@ -386,28 +407,24 @@
                 if (startTime === null) startTime = currentTime;
                 const timeElapsed = currentTime - startTime;
                 const progress = Math.min(timeElapsed / duration, 1);
-                const easedProgress = easeInOutQuad(progress);
-                window.scrollTo(0, startY + distance * easedProgress);
+                window.scrollTo(0, startY + distance * easeInOutQuad(progress));
                 if (timeElapsed < duration) requestAnimationFrame(animation);
             }
             requestAnimationFrame(animation);
         };
 
         const applyScrollWarp = () => {
-            const scrollHeight = document.body.scrollHeight;
-            const viewportHeight = window.innerHeight;
+            const scrollHeight = document.body.scrollHeight, viewportHeight = window.innerHeight;
             if (scrollHeight <= viewportHeight) return;
             const action = Math.random();
             if (action < 0.60) {
                 const jerkAmount = (Math.random() - 0.5) * 600;
-                window.scrollBy({ top: jerkAmount, left: 0, behavior: 'smooth' });
-                setTimeout(() => window.scrollBy({ top: -jerkAmount, left: 0, behavior: 'smooth' }), 300);
+                window.scrollBy({ top: jerkAmount, behavior: 'smooth' });
+                setTimeout(() => window.scrollBy({ top: -jerkAmount, behavior: 'smooth' }), 300);
             } else if (action < 0.75) {
-                const randomY = Math.random() * (scrollHeight - viewportHeight);
-                window.scrollTo({ top: randomY, left: 0, behavior: 'auto' });
+                window.scrollTo({ top: Math.random() * (scrollHeight - viewportHeight) });
             } else {
-                const currentScrollY = window.scrollY;
-                const targetY = (currentScrollY < scrollHeight / 2) ? (scrollHeight - viewportHeight) : 0;
+                const targetY = (window.scrollY < scrollHeight / 2) ? (scrollHeight - viewportHeight) : 0;
                 smoothScrollTo(targetY, 2500 + Math.random() * 2000);
             }
         };
@@ -420,44 +437,29 @@
             }
         };
         
-        // --- NEW: Typing Glitch Handler ---
         const handleTypingGlitch = (event) => {
-            if (!isTabActive || Math.random() > 0.10) { // 10% chance to glitch on any input
-                return;
-            }
-
+            if (!isTabActive || Math.random() > 0.10) return;
             const el = event.target;
-            // Use a simple flag to prevent the event from re-triggering itself
             if (el.isGlitching) return; 
 
             el.isGlitching = true;
 
-            // Use a minimal timeout to let the original input event resolve.
-            // This is a robust way to prevent infinite event loops.
             setTimeout(() => {
+                const start = el.selectionStart;
                 if (Math.random() < 0.5) { 
-                    // 50% chance for a character insert
                     const glitchChars = ['ø', '£', '€', '¡', '§', '¶', '•', 'ª', 'º', '±', '≠', '≤', '≥', 'µ', 'ö', 'ü', 'ä', 'ß', 'æ'];
-                    const start = el.selectionStart;
-                    const end = el.selectionEnd;
-                    const randomChar = glitchChars[Math.floor(Math.random() * glitchChars.length)];
-                    
-                    el.value = el.value.substring(0, start) + randomChar + el.value.substring(end);
+                    const randomChar = glitchChars[~~(Math.random() * glitchChars.length)];
+                    el.value = el.value.substring(0, start) + randomChar + el.value.substring(el.selectionEnd);
                     el.selectionStart = el.selectionEnd = start + 1;
                 } else { 
-                    // 50% chance for a cursor jump
-                    const start = el.selectionStart;
-                    const offset = Math.floor(Math.random() * 10) + 1; // 1 to 10 chars
+                    const offset = ~~(Math.random() * 10) + 1;
                     const newPos = Math.max(0, start - offset);
                     el.setSelectionRange(newPos, newPos);
                 }
-                
-                // Release the flag
                 el.isGlitching = false;
             }, 4); 
         };
 
-        // --- Global Object & State ---
         window.GlitchArt = {
             isActive: true,
             stackGlitch: applyStackGlitch,
@@ -469,7 +471,6 @@
             scrollWarp: applyScrollWarp,
         };
         
-        // --- 3. OPTIMIZED SCHEDULER & ACTIVATOR ---
         const effectConfig = {
             stackGlitch: { func: window.GlitchArt.stackGlitch, cooldown: 11230, chance: 0.7, lastRun: 0 },
             imageStack: { func: window.GlitchArt.imageStack, cooldown: 9050, chance: 0.7, lastRun: 0 },
@@ -480,7 +481,6 @@
             ghostCursor: { func: window.GlitchArt.ghostCursor, cooldown: 13333, chance: 0.75, lastRun: 0 },
         };
         
-        // --- Tab Visibility, Loop Control & State ---
         let isTabActive = !document.hidden;
         let lastFrameTime = 0;
         let animationFrameId = null;
@@ -491,9 +491,11 @@
                 return;
             }
             lastFrameTime = currentTime;
-
-            for (const key in effectConfig) {
-                const effect = effectConfig[key];
+            
+            // OPTIMIZATION: Cache object keys for faster iteration
+            const effectKeys = Object.keys(effectConfig);
+            for (let i = 0, len = effectKeys.length; i < len; i++) {
+                const effect = effectConfig[effectKeys[i]];
                 if (currentTime - effect.lastRun > effect.cooldown) {
                     if (Math.random() < effect.chance) {
                         effect.func();
@@ -510,17 +512,16 @@
                 cancelAnimationFrame(animationFrameId);
             } else {
                 console.log('[GlitchArt] Tab is now active. Restarting cooldowns for a moment of peace.');
-                
                 const now = performance.now();
-                for (const key in effectConfig) {
-                    effectConfig[key].lastRun = now;
+                const effectKeys = Object.keys(effectConfig);
+                for (let i = 0, len = effectKeys.length; i < len; i++) {
+                    effectConfig[effectKeys[i]].lastRun = now;
                 }
                 lastFrameTime = now;
                 glitchLoop(now);
             }
         });
         
-        // --- 4. KICK-OFF ---
         console.log('[GlitchArt] Activating optimized scheduler and event listeners.');
         glitchLoop(performance.now());
         window.addEventListener('wheel', handleScrollReversal, { passive: false });
@@ -528,7 +529,6 @@
              if (isTabActive && Math.random() < 0.15) window.GlitchArt.datamosh();
         });
         
-        // NEW: Activate typing glitch listeners
         console.log('[GlitchArt] Activating typing listeners.');
         document.querySelectorAll('input[type="text"], textarea').forEach(el => {
             el.addEventListener('input', handleTypingGlitch);
