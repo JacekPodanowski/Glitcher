@@ -113,7 +113,7 @@ $border = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591
 $reverseBorder = [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
 $logoLine1 = $border + $centeredText1 + $reverseBorder
 $logoLine2 = $border + $line2Content + $reverseBorder
-$logoLine3 = $border + $logoText3 + $reverseBorder  
+$logoLine3 = $border + $logoText3 + $reverseBorder
 $protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine1 -IsLogo
 $protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine2 -IsLogo
 $protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine3 -IsLogo
@@ -170,9 +170,11 @@ while ($true) {
             break
         }
 
-        # Reset idle timer on any other key press.
-        $stopwatch.Restart()
-        $timeOfLastMessageEnd = [datetime]::MinValue
+        # Reset idle timer only on a real key press
+        if ($key.VirtualKeyCode -ne 0) {
+            $stopwatch.Restart()
+            $timeOfLastMessageEnd = [datetime]::MinValue
+        }
     }
 
     if ($vandalModeActive) {
@@ -181,7 +183,7 @@ while ($true) {
         do { $randTop = Get-Random -Minimum 0 -Maximum ($Host.UI.RawUI.WindowSize.Height - 1) } while ($protectedRows -contains $randTop)
         [Console]::SetCursorPosition((Get-Random -Minimum 0 -Maximum ($consoleWidth - 4)), $randTop)
         Write-Host -NoNewline "w3o " -ForegroundColor DarkGray
-        if (((Get-Date) - $timeOfLastArtgenLaunch).TotalSeconds -ge 3) {
+        if (((Get-Date) - $timeOfLastArtgenLaunch).TotalSeconds -ge 2) {
             try {
                 if (Test-Path $ArtgenScriptPath) {
                     Start-Process -FilePath $ArtgenScriptPath -ErrorAction SilentlyContinue

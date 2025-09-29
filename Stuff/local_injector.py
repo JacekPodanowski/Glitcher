@@ -2,7 +2,6 @@ import sys
 import os
 import time
 import requests
-import json
 from urllib.parse import urlparse
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
