@@ -113,7 +113,7 @@ $border = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591
 $reverseBorder = [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
 $logoLine1 = $border + $centeredText1 + $reverseBorder
 $logoLine2 = $border + $line2Content + $reverseBorder
-$logoLine3 = " " * $border.Length + $logoText3 + " " * $reverseBorder.Length
+$logoLine3 = $border + $logoText3 + $reverseBorder  
 $protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine1 -IsLogo
 $protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine2 -IsLogo
 $protectedRows.Add([Console]::CursorTop); Write-Centered -Text $logoLine3 -IsLogo
@@ -259,11 +259,10 @@ switch ($choice) {
             exit 1
         }
 
-        Write-Glitchy -Text ">> Launching ..."
+        Write-Glitchy -Text ">> Launching injector for: $websiteUrl ..."
+
         $pipArgs = "install requests selenium urllib3"
         Start-Process -FilePath "pip" -ArgumentList $pipArgs -WindowStyle Hidden -Wait
-
-        Write-Glitchy -Text ">> Launching injector for: $websiteUrl"
 
         Start-Process -FilePath "python.exe" -ArgumentList @($InjectorPyPath, $websiteUrl) -WindowStyle Hidden
 
@@ -305,4 +304,4 @@ switch ($choice) {
     }
 }
 
-Write-Host ""```
+Write-Host ""
