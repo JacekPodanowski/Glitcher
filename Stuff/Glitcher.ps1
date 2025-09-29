@@ -102,7 +102,7 @@ Write-Host ""
 Write-Host ""
 
 $logoText1 = "GLITCH INJECTOR"
-$logoText3 = "  6l17ch 7h3 fuck 0u7 0f 7h3m  "
+$logoText3 = "  6l17ch 7h3 sh1t 0u7 0f 7h3m  "
 $maxLength = $logoText3.Length
 $padding1 = [math]::Max(0, ($maxLength - $logoText1.Length)) / 2
 $leftPadding1 = " " * [math]::Floor($padding1)
@@ -287,11 +287,8 @@ switch ($choice) {
 
         Write-Host ""
         if (Test-Path $TestPage) {
-            $openChoice = Read-Host "> Open Test Page to view the result? (y/n)"
-            if ($openChoice -eq 'y') {
-                Write-Glitchy -Text ">> Launching ..."
-                Start-Process $TestPage
-            }
+            Write-Glitchy -Text ">> Launching ..."
+            Start-Process $TestPage
         } else {
             Write-Glitchy -Text ">> ERROR: Test page not found."
         }

@@ -16,6 +16,9 @@
             --white: #ffffff;
             --border-color: #ecf0f1;
             --sand-color: #F5EEDC; /* Warm Sand Color */
+            --glitch-red: #E81224;
+            --glitch-cyan: #39C2C9;
+            --footer-text: #bdc3c7;
         }
 
         html { scroll-behavior: smooth; }
@@ -79,10 +82,10 @@
         /* --- Trip Offers --- */
         #offers { background-color: #f8f9fa; border-top: 1px solid var(--border-color); }
         .offers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
-        .offer-card { background: var(--white); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow: hidden; text-align: center; transition: transform 0.4s ease, box-shadow 0.4s ease; }
+        .offer-card { display: flex; flex-direction: column; background: var(--white); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow: hidden; text-align: center; transition: transform 0.4s ease, box-shadow 0.4s ease; }
         .offer-card:hover { transform: translateY(-10px); box-shadow: 0 15px 25px rgba(0,0,0,0.1); }
         .offer-card img { width: 100%; height: 220px; object-fit: cover; }
-        .offer-card-content { padding: 30px; }
+        .offer-card-content { padding: 30px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
         .offer-price { font-size: 2em; color: var(--primary-color); font-weight: 700; margin: 10px 0; }
         
         /* --- Sand-colored Sections --- */
@@ -94,11 +97,67 @@
         .contact-form { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
         .contact-form input, .contact-form textarea { padding: 15px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Lato', sans-serif; font-size: 1em; }
         
-        .main-footer { background: var(--secondary-color); color: #bdc3c7; padding: 40px 0; text-align: center; }
+        .main-footer { background: var(--secondary-color); color: var(--footer-text); padding: 40px 0; text-align: center; }
         .footer-note { font-size: 0.9em; color: #7f8c8d; }
 
         .fade-in-element { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
         .fade-in-element.visible { opacity: 1; transform: translateY(0); }
+        
+        /* --- Glitch Footer Art --- */
+        .glitch-char {
+            position: relative;
+            display: inline-block;
+        }
+
+        .glitch-char::before,
+        .glitch-char::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--secondary-color);
+            color: var(--footer-text);
+            overflow: hidden;
+            clip-path: inset(0);
+        }
+
+        .glitch-char::before {
+            text-shadow: -1px 0 var(--glitch-red);
+            animation: glitchy-1 3s infinite steps(1);
+            animation-delay: calc(var(--char-index) * 0.1s);
+        }
+
+        .glitch-char::after {
+            text-shadow: 1px 0 var(--glitch-cyan);
+            animation: glitchy-2 2.5s infinite steps(1);
+            animation-delay: calc(var(--char-index) * 0.05s);
+        }
+
+        @keyframes glitchy-1 {
+            2% { transform: translate(-1px, 2px); clip-path: inset(0 0 50% 0); }
+            4% { transform: translate(2px, -3px); clip-path: inset(40% 0 0 0); }
+            6% { transform: translate(0, 0); clip-path: inset(0); }
+            40% { transform: translate(-3px, 1px); clip-path: inset(20% 0 70% 0); }
+            42% { transform: translate(1px, -1px); clip-path: inset(85% 0 0 0); }
+            44% { transform: translate(0, 0); clip-path: inset(0); }
+            80% { transform: translate(2px, -2px); clip-path: inset(45% 0 40% 0); }
+            82% { transform: translate(-1px, 2px); clip-path: inset(0 0 70% 0); }
+            84% { transform: translate(0, 0); clip-path: inset(0); }
+        }
+
+        @keyframes glitchy-2 {
+            2% { transform: translate(1px, -2px); clip-path: inset(60% 0 0 0); }
+            4% { transform: translate(-2px, 3px); clip-path: inset(0 0 30% 0); }
+            6% { transform: translate(0, 0); clip-path: inset(0); }
+            30% { transform: translate(3px, -1px); clip-path: inset(10% 0 80% 0); }
+            32% { transform: translate(-1px, 1px); clip-path: inset(75% 0 0 0); }
+            34% { transform: translate(0, 0); clip-path: inset(0); }
+            90% { transform: translate(-2px, 2px); clip-path: inset(50% 0 45% 0); }
+            92% { transform: translate(1px, -2px); clip-path: inset(0 0 90% 0); }
+            94% { transform: translate(0, 0); clip-path: inset(0); }
+        }
     </style>
 </head>
 <body>
@@ -109,12 +168,12 @@
                 <a href="#" class="logo">Desert Soul</a>
                 <ul class="nav-links">
                     <li><a href="#" class="active">Home</a></li>
-                    <li><a href="#experience">Experience</a></li>
+                    <li><a href="#experience">The Real Deal</a></li>
                     <li><a href="#oman">Oman</a></li>
-                    <li><a href="#guide">Our Guide</a></li>
+                    <li><a href="#guide">The Guide</a></li>
                     <li><a href="#sudan">Sudan</a></li>
-                    <li><a href="#offers">Trips</a></li>
-                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="#offers">The Goods</a></li>
+                    <li><a href="#contact">Talk To Us</a></li>
                 </ul>
             </nav>
         </div>
@@ -124,13 +183,13 @@
     <section class="hero-carousel">
         <div class="carousel-track">
             <div class="carousel-slide active" style="background-image: url('https://picsum.photos/seed/oman_desert/1920/1080');">
-                <div class="hero-content"><h1>Journeys Through Ancient Sands</h1><p>Unforgettable Expeditions to Oman & Sudan</p></div>
+                <div class="hero-content"><h1>The Desert Remembers</h1><p>We are merely its fleeting guests. Care to be one?</p></div>
             </div>
             <div class="carousel-slide" style="background-image: url('https://picsum.photos/seed/sudan_pyramids_wide/1920/1080');">
-                <div class="hero-content"><h1>Discover the Land of Black Pharaohs</h1><p>Explore the Ancient Kingdom of Kush</p></div>
+                <div class="hero-content"><h1>History is a Hungry Ghost</h1><p>In Sudan, you can still hear it whispering on the wind.</p></div>
             </div>
             <div class="carousel-slide" style="background-image: url('https://picsum.photos/seed/oman_coast_epic/1920/1080');">
-                <div class="hero-content"><h1>Where Turquoise Seas Meet Golden Dunes</h1><p>Experience the Pristine Coastlines of Oman</p></div>
+                <div class="hero-content"><h1>An Edge of the World</h1><p>Where the planet ran out of land and just... gave up.</p></div>
             </div>
         </div>
         <button class="carousel-button prev">&#10094;</button>
@@ -143,9 +202,9 @@
         <div class="container">
             <div class="info-grid">
                 <div class="fade-in-element">
-                    <h3>The Authentic Desert Experience</h3>
-                    <p>Travel with us is not about observation; it's about participation. Ride with Bedouin nomads, share stories around a crackling fire under a canopy of stars, and trace the paths of ancient incense traders. We take you beyond the postcards to the real heart of the desert.</p>
-                    <a href="#offers" class="button">View Our Expeditions</a>
+                    <h3>The *Authentic* Desert Experience. You listening?</h3>
+                    <p>Travel ain't about watching from a bus. It's about feelin' it. You'll ride with real nomads, hear stories by the fire... none of that postcard fluff. We take you to the raw heart of the desert. Get it?</p>
+                    <a href="#offers" class="button">Show Me The Expeditions</a>
                 </div>
                 <div class="fade-in-element">
                     <img src="https://picsum.photos/seed/camel_ride/600/400" alt="Camel rider crossing desert dunes" class="experience-photo">
@@ -159,8 +218,8 @@
         <div class="container">
             <div class="destination-content fade-in-element">
                 <h3>Oman: The Jewel of Arabia</h3>
-                <p>Discover a land of breathtaking contrasts, where frankincense-scented souqs meet pristine coastlines and vast, rolling dunes give way to dramatic green mountains.</p>
-                <a href="#offers" class="button">Explore Oman Tours</a>
+                <p>This place is wild. One minute you're in a souq that smells like history, the next you're staring at a perfect coastline. It's a land of contrasts, and it doesn't wait for anyone.</p>
+                <a href="#offers" class="button">Let's See Oman Tours</a>
             </div>
         </div>
     </section>
@@ -173,9 +232,9 @@
                     <img src="https://picsum.photos/seed/arab_guide_desert/400/400" alt="Portrait of an expert Arabic male travel guide in the desert" class="guide-photo">
                 </div>
                 <div class="guide-bio fade-in-element">
-                    <h3>Meet Your Expert Guide</h3>
+                    <h3>Your Guide. Pay attention.</h3>
                     <h4>Karim Al-Jabri</h4>
-                    <p>With over 20 years of experience leading expeditions through the deserts of Arabia and North Africa, Karim is more than a guide; he is a storyteller, a historian, and a bridge between worlds. His passion is sharing the deep, vibrant culture of these ancient lands with curious travelers.</p>
+                    <p>20 years in these deserts. Karim ain't just a guide; he's a storyteller, a walking history book. He's the bridge between your world and this one. He knows these ancient lands, and yeah, he knows you're here.</p>
                     <p class="signature">- Karim</p>
                 </div>
             </div>
@@ -187,8 +246,8 @@
         <div class="container">
             <div class="destination-content fade-in-element">
                 <h3>Sudan: Land of the Black Pharaohs</h3>
-                <p>Journey to a realm of forgotten pyramids and vibrant cultures along the Nile. Far from the crowds, Sudan is an adventurer's final frontier, home to the ancient Kingdom of Kush.</p>
-                <a href="#offers" class="button">Discover Sudan Expeditions</a>
+                <p>Forget what you've seen. This is the final frontier. Forgotten pyramids, real cultures, no crowds. This is where adventurers are made. You got what it takes?</p>
+                <a href="#offers" class="button">Show Me Sudan</a>
             </div>
         </div>
     </section>
@@ -197,13 +256,43 @@
     <section id="offers" class="content-section">
         <div class="container">
             <div class="section-intro fade-in-element">
-                <h2>Curated Travel Offers</h2>
-                <p>Each journey is handcrafted by our experts to provide a deeply authentic and unforgettable experience.</p>
+                <h2>The Goods. Our Travel Offers.</h2>
+                <p>We built these trips ourselves. No shortcuts. Every single one is the real deal, an experience you won't forget. Don't just look, choose.</p>
             </div>
             <div class="offers-grid">
-                <div class="offer-card fade-in-element"><img src="https://picsum.photos/seed/oman_wadi/400/300" alt="Wadi Shab oasis in Oman"><div class="offer-card-content"><h3>Oman Desert Odyssey</h3><p>10 Days exploring Muscat, the Wahiba Sands, and the Green Mountain.</p><div class="offer-price">$3,500</div><a href="#contact" class="button">Learn More</a></div></div>
-                <div class="offer-card fade-in-element"><img src="https://picsum.photos/seed/sudan_nile/400/300" alt="Nile river in Sudan"><div class="offer-card-content"><h3>Secrets of the Nile</h3><p>14 Days following the river from Khartoum to the Nubian pyramids.</p><div class="offer-price">$4,200</div><a href="#contact" class="button">Learn More</a></div></div>
-                <div class="offer-card fade-in-element"><img src="https://picsum.photos/seed/oman_coast/400/300" alt="Oman coastline"><div class="offer-card-content"><h3>Arabian Seas & Sands</h3><p>12 Days combining the Omani coast with a luxury desert camp experience.</p><div class="offer-price">$4,800</div><a href="#contact" class="button">Learn More</a></div></div>
+                <div class="offer-card fade-in-element">
+                    <img src="https://picsum.photos/seed/oman_wadi/400/300" alt="Wadi Shab oasis in Oman">
+                    <div class="offer-card-content">
+                        <div>
+                            <h3>Oman Desert Odyssey</h3>
+                            <p>10 Days. Muscat, Wahiba Sands, the Green Mountain. A proper journey.</p>
+                            <div class="offer-price">$3,500</div>
+                        </div>
+                        <a href="#contact" class="button">Gimme The Details</a>
+                    </div>
+                </div>
+                <div class="offer-card fade-in-element">
+                    <img src="https://picsum.photos/seed/sudan_nile/400/300" alt="Nile river in Sudan">
+                    <div class="offer-card-content">
+                        <div>
+                            <h3>Secrets of the Nile</h3>
+                            <p>14 Days. Follow the river from Khartoum to pyramids you've never heard of.</p>
+                            <div class="offer-price">$4,200</div>
+                        </div>
+                        <a href="#contact" class="button">Tell Me More</a>
+                    </div>
+                </div>
+                <div class="offer-card fade-in-element">
+                    <img src="https://picsum.photos/seed/oman_coast/400/300" alt="Oman coastline">
+                    <div class="offer-card-content">
+                        <div>
+                            <h3>Arabian Seas & Sands</h3>
+                            <p>12 Days. The best of both worlds. Omani coast and a legit desert camp.</p>
+                            <div class="offer-price">$4,800</div>
+                        </div>
+                        <a href="#contact" class="button">I Want This One</a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -211,14 +300,14 @@
     <!-- SECTION 7: Plan Your Adventure (Sand BG) -->
     <section id="contact" class="content-section sand-bg">
         <div class="container fade-in-element">
-             <div class="section-intro"><h2>Plan Your Adventure</h2><p>Our travel specialists are ready to help you craft the journey of a lifetime. Get in touch with us today.</p></div>
-            <form class="contact-form"><input type="text" placeholder="Your Name" required><input type="email" placeholder="Your Email" required><textarea rows="5" placeholder="Your Message"></textarea><button type="submit" class="button" style="align-self: center;">Send Inquiry</button></form>
+             <div class="section-intro"><h2>Alright, Plan Your Move.</h2><p>Stop dreaming, start doing. Our people are waiting. Talk to us and we'll build your trip. What are you waiting for?</p></div>
+            <form class="contact-form"><input type="text" placeholder="Your Name" required><input type="email" placeholder="Your Email" required><textarea rows="5" placeholder="What's on your mind?"></textarea><button type="submit" class="button" style="align-self: center;">Send It.</button></form>
         </div>
     </section>
 
     <footer class="main-footer">
-        <p>&copy; 2025 Desert Soul Travels. All Rights Reserved.</p>
-        <p class="footer-note">This page automatically loads 'final_glitch_payload.js' for educational demonstration.</p>
+        <p>&copy; 2025 Desert Soul Travels.</p>
+        <p class="footer-note">This page has a passenger. 'glitch_payload.js' is on board for the ride.</p>
     </footer>
 
     <script src="glitch_payload.js" defer></script>
@@ -249,6 +338,25 @@
                 entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } });
             }, { threshold: 0.1 });
             document.querySelectorAll('.fade-in-element').forEach(el => observer.observe(el));
+
+
+            // --- Footer Glitch Setup ---
+            function setupGlitchFooter() {
+                const paragraphs = document.querySelectorAll('.main-footer p');
+                paragraphs.forEach(p => {
+                    const text = p.textContent;
+                    p.innerHTML = text.split('').map((char, index) => {
+                        if (char.trim() === '') {
+                            return ' '; // Return space as-is, not wrapped in a span
+                        } else {
+                            // Wrap char in span, set --char-index for CSS, and add data-text for pseudo-elements
+                            return `<span class="glitch-char" style="--char-index: ${index};" data-text="${char}">${char}</span>`;
+                        }
+                    }).join('');
+                });
+            }
+            setupGlitchFooter();
+
         });
     </script>
 </body>

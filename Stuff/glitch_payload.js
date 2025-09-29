@@ -8,6 +8,11 @@
  * - Reworked scroll effects with smooth scrolling.
  * - Added a "scroll reversal" effect to hijack user scrolling.
  * - All previous fixes (tab visibility, cursor hiding) are included.
+ *
+ * MODIFIED based on user request (v9):
+ * - Added a new "Typing Glitch" that activates on text fields.
+ * - Randomly inserts strange characters or jumps the cursor back as the user types.
+ * - Tab visibility logic now creates a "moment of peace" upon returning.
  */
 
 (function(window) {
@@ -36,9 +41,16 @@
 
         const style = document.createElement('style');
         style.textContent = `
-            @keyframes stack-glitch { 0% { transform: translateY(0); opacity: 1; } 20% { transform: translateY(5px); opacity: 0.9; } 40% { transform: translateY(10px); opacity: 0.8; } 60% { transform: translateY(15px); opacity: 0.7; } 80% { transform: translateY(20px); opacity: 0.6; } 100% { transform: translateY(25px); opacity: 0.5; } }
-            .glitch-stack-container { position: relative; display: inline-block; }
-            .glitch-stack-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; filter: hue-rotate(var(--hue-shift, 0deg)) brightness(0.8); animation: stack-glitch 0.8s ease-out forwards; animation-delay: var(--delay, 0s); }
+            /* MODIFIED KEYFRAME TO USE A PROGRESSIVE MULTIPLIER */
+            @keyframes stack-glitch { 
+                0%, 100% { transform: translate(0, 0); } 
+                20% { transform: translate(calc(var(--glitch-dx) * var(--glitch-multiplier)), calc(var(--glitch-dy) * var(--glitch-multiplier))); } 
+                40% { transform: translate(calc(var(--glitch-dx) * -1 * var(--glitch-multiplier)), calc(var(--glitch-dy) * -1 * var(--glitch-multiplier))); } 
+                60% { transform: translate(calc(var(--glitch-dx) * 0.7 * var(--glitch-multiplier)), calc(var(--glitch-dy) * -0.4 * var(--glitch-multiplier))); } 
+                80% { transform: translate(calc(var(--glitch-dx) * -0.4 * var(--glitch-multiplier)), calc(var(--glitch-dy) * 0.7 * var(--glitch-multiplier))); } 
+            }
+            .glitch-stack-container { position: relative; display: inline-block; z-index: 1; }
+            .glitch-stack-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; filter: hue-rotate(var(--hue-shift, 0deg)) brightness(0.8); animation: stack-glitch 0.8s ease-in-out forwards; animation-delay: var(--delay, 0s); opacity: 1; }
             .glitch-image-container { position: relative; display: inline-block; overflow: visible; }
             .glitch-image-stack { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
             .glitch-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; mix-blend-mode: screen; opacity: 0.8; }
@@ -77,36 +89,58 @@
         // --- All Glitch Effect Functions ---
 
         const applyStackGlitch = () => {
-            const elements = Array.from(document.body.querySelectorAll('div, p, h1, h2, h3, span, button, a, section, article, header, nav, main, aside, footer'));
+            const elements = Array.from(document.body.querySelectorAll('p, h1, h2, h3, span, a, li, blockquote'));
             if (elements.length === 0) return;
+
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 3 + Math.random() * 7;
+            const dx = Math.cos(angle) * distance;
+            const dy = Math.sin(angle) * distance;
+            const isProgressive = Math.random() < 0.5;
+
             let numElements;
-            const allElementsChance = Math.random();
-            if (allElementsChance < 0.15) {
+            const chance = Math.random();
+            if (chance < 0.20) {
                 numElements = elements.length;
-            } else if (allElementsChance < 0.35) {
+            } else if (chance < 0.70) {
                 numElements = Math.floor(elements.length * (0.2 + Math.random() * 0.3));
             } else {
-                numElements = Math.floor(Math.random() * 8) + 1;
+                numElements = 1;
             }
+
             const shuffled = elements.sort(() => Math.random() - 0.5);
             const selected = shuffled.slice(0, numElements);
+            
             selected.forEach(el => {
                 const rect = el.getBoundingClientRect();
-                if (rect.width < 20 || rect.height < 20) return;
-                const numLayers = Math.floor(Math.random() * 5) + 3;
+                if (rect.width < 10 || rect.height < 10 || el.closest('.glitch-stack-container')) return;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'glitch-stack-container';
+                el.parentNode.insertBefore(wrapper, el);
+                wrapper.appendChild(el);
+
+                const numLayers = Math.floor(Math.random() * 20) + 3;
+                
                 for (let i = 1; i <= numLayers; i++) {
                     const clone = el.cloneNode(true);
                     clone.classList.add('glitch-stack-layer');
-                    clone.style.setProperty('--delay', `${i * 0.08}s`);
+                    clone.style.setProperty('--glitch-dx', `${dx}px`);
+                    clone.style.setProperty('--glitch-dy', `${dy}px`);
+                    const multiplier = isProgressive ? i * 0.2 : 1.5;
+                    clone.style.setProperty('--glitch-multiplier', multiplier);
+                    clone.style.setProperty('--delay', `${i * 0.02}s`);
                     clone.style.setProperty('--hue-shift', `${Math.random() * 360}deg`);
-                    clone.style.zIndex = parseInt(getComputedStyle(el).zIndex || 0) - i;
-                    el.parentNode.insertBefore(clone, el.nextSibling);
-                    setTimeout(() => {
-                        if (clone.parentNode) {
-                            clone.parentNode.removeChild(clone);
-                        }
-                    }, 800 + (i * 80));
+                    clone.style.zIndex = i;
+                    wrapper.appendChild(clone);
                 }
+
+                setTimeout(() => {
+                    if (wrapper.parentNode) {
+                        wrapper.parentNode.insertBefore(el, wrapper);
+                        wrapper.parentNode.removeChild(wrapper);
+                    }
+                }, 880); 
             });
         };
 
@@ -364,11 +398,11 @@
             const viewportHeight = window.innerHeight;
             if (scrollHeight <= viewportHeight) return;
             const action = Math.random();
-            if (action < 0.33) {
+            if (action < 0.60) {
                 const jerkAmount = (Math.random() - 0.5) * 600;
                 window.scrollBy({ top: jerkAmount, left: 0, behavior: 'smooth' });
                 setTimeout(() => window.scrollBy({ top: -jerkAmount, left: 0, behavior: 'smooth' }), 300);
-            } else if (action < 0.66) {
+            } else if (action < 0.75) {
                 const randomY = Math.random() * (scrollHeight - viewportHeight);
                 window.scrollTo({ top: randomY, left: 0, behavior: 'auto' });
             } else {
@@ -385,6 +419,43 @@
                 window.scrollBy(0, -event.deltaY);
             }
         };
+        
+        // --- NEW: Typing Glitch Handler ---
+        const handleTypingGlitch = (event) => {
+            if (!isTabActive || Math.random() > 0.10) { // 10% chance to glitch on any input
+                return;
+            }
+
+            const el = event.target;
+            // Use a simple flag to prevent the event from re-triggering itself
+            if (el.isGlitching) return; 
+
+            el.isGlitching = true;
+
+            // Use a minimal timeout to let the original input event resolve.
+            // This is a robust way to prevent infinite event loops.
+            setTimeout(() => {
+                if (Math.random() < 0.5) { 
+                    // 50% chance for a character insert
+                    const glitchChars = ['ø', '£', '€', '¡', '§', '¶', '•', 'ª', 'º', '±', '≠', '≤', '≥', 'µ', 'ö', 'ü', 'ä', 'ß', 'æ'];
+                    const start = el.selectionStart;
+                    const end = el.selectionEnd;
+                    const randomChar = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                    
+                    el.value = el.value.substring(0, start) + randomChar + el.value.substring(end);
+                    el.selectionStart = el.selectionEnd = start + 1;
+                } else { 
+                    // 50% chance for a cursor jump
+                    const start = el.selectionStart;
+                    const offset = Math.floor(Math.random() * 10) + 1; // 1 to 10 chars
+                    const newPos = Math.max(0, start - offset);
+                    el.setSelectionRange(newPos, newPos);
+                }
+                
+                // Release the flag
+                el.isGlitching = false;
+            }, 4); 
+        };
 
         // --- Global Object & State ---
         window.GlitchArt = {
@@ -397,32 +468,30 @@
             textCorrupt: applyTextCorruption,
             scrollWarp: applyScrollWarp,
         };
-
-        // --- Tab Visibility Control ---
-        let isTabActive = !document.hidden;
-        document.addEventListener('visibilitychange', () => {
-            isTabActive = !document.hidden;
-            console.log(`[GlitchArt] Tab is now ${isTabActive ? 'active' : 'hidden'}.`);
-        });
-
+        
         // --- 3. OPTIMIZED SCHEDULER & ACTIVATOR ---
         const effectConfig = {
-            stackGlitch: { func: window.GlitchArt.stackGlitch, cooldown: 8200, chance: 0.7, lastRun: 0 },
+            stackGlitch: { func: window.GlitchArt.stackGlitch, cooldown: 11230, chance: 0.7, lastRun: 0 },
             imageStack: { func: window.GlitchArt.imageStack, cooldown: 9050, chance: 0.7, lastRun: 0 },
-            textCorrupt: { func: window.GlitchArt.textCorrupt, cooldown: 5000, chance: 0.8, lastRun: 0 },
-            rgbSplit: { func: window.GlitchArt.rgbSplit, cooldown: 17550, chance: 0.7, lastRun: 0 },
-            datamosh: { func: window.GlitchArt.datamosh, cooldown: 12420, chance: 0.7, lastRun: 0 },
-            scrollWarp: { func: window.GlitchArt.scrollWarp, cooldown: 15132, chance: 0.6, lastRun: 0 },
+            textCorrupt: { func: window.GlitchArt.textCorrupt, cooldown: 4400, chance: 0.8, lastRun: 0 },
+            rgbSplit: { func: window.GlitchArt.rgbSplit, cooldown: 20140, chance: 0.7, lastRun: 0 },
+            datamosh: { func: window.GlitchArt.datamosh, cooldown: 16380, chance: 0.7, lastRun: 0 },
+            scrollWarp: { func: window.GlitchArt.scrollWarp, cooldown: 22482, chance: 0.6, lastRun: 0 },
             ghostCursor: { func: window.GlitchArt.ghostCursor, cooldown: 13333, chance: 0.75, lastRun: 0 },
         };
-
+        
+        // --- Tab Visibility, Loop Control & State ---
+        let isTabActive = !document.hidden;
         let lastFrameTime = 0;
+        let animationFrameId = null;
+
         function glitchLoop(currentTime) {
-            requestAnimationFrame(glitchLoop);
-            if (!isTabActive || currentTime - lastFrameTime < 1000) {
+            animationFrameId = requestAnimationFrame(glitchLoop);
+            if (currentTime - lastFrameTime < 1000) {
                 return;
             }
             lastFrameTime = currentTime;
+
             for (const key in effectConfig) {
                 const effect = effectConfig[key];
                 if (currentTime - effect.lastRun > effect.cooldown) {
@@ -434,12 +503,35 @@
             }
         }
         
+        document.addEventListener('visibilitychange', () => {
+            isTabActive = !document.hidden;
+            if (document.hidden) {
+                console.log('[GlitchArt] Tab is now hidden. Pausing loop.');
+                cancelAnimationFrame(animationFrameId);
+            } else {
+                console.log('[GlitchArt] Tab is now active. Restarting cooldowns for a moment of peace.');
+                
+                const now = performance.now();
+                for (const key in effectConfig) {
+                    effectConfig[key].lastRun = now;
+                }
+                lastFrameTime = now;
+                glitchLoop(now);
+            }
+        });
+        
         // --- 4. KICK-OFF ---
         console.log('[GlitchArt] Activating optimized scheduler and event listeners.');
-        requestAnimationFrame(glitchLoop);
+        glitchLoop(performance.now());
         window.addEventListener('wheel', handleScrollReversal, { passive: false });
         document.body.addEventListener('click', () => {
              if (isTabActive && Math.random() < 0.15) window.GlitchArt.datamosh();
+        });
+        
+        // NEW: Activate typing glitch listeners
+        console.log('[GlitchArt] Activating typing listeners.');
+        document.querySelectorAll('input[type="text"], textarea').forEach(el => {
+            el.addEventListener('input', handleTypingGlitch);
         });
     };
 
