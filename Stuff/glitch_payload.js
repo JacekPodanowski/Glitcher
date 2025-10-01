@@ -1,40 +1,19 @@
 /**
- * Enhanced Glitch Art Effects Payload v6.12 (Complete & Optimized)
+ * Enhanced Glitch Art Effects Payload v6.16 (Complete & Optimized)
  * For Educational & Artistic Use Only
  *
  * This version is a complete, self-contained file with all functions fully implemented.
- * - Optimized with a single requestAnimationFrame loop for performance.
- * - Centralized effect configuration for easy control over timing and probability.
- * - Reworked scroll effects with smooth scrolling.
- * - Added a "scroll reversal" effect to hijack user scrolling.
- * - All previous fixes (tab visibility, cursor hiding) are included.
- *
- * MODIFIED based on user request (v23):
- * - Button Glitch Overhaul:
- *   - The first teleport is now a "shock" jump up to 200px.
- *   - The button is unclickable for the first 1 second of the effect.
- *   - A rapid attack of 10 teleports occurs within the first second.
- *   - Regular teleporting is faster and the shake effect is 2x stronger.
+ * - NEW, UNIVERSAL SHADOW GLITCH:
+ *   - Applies a strong, shaky, multi-colored drop-shadow to ALL elements simultaneously.
+ *   - Features a high-intensity animation with large offsets for a chaotic visual effect.
+ *   - Respects the page's Z-axis for proper layering.
+ * - Dependency-free and includes all other recent features.
  */
 
 (function(window) {
-    // --- 1. DEPENDENCY LOADER ---
-    const initialize = () => {
-        if (typeof html2canvas !== 'undefined') {
-            main();
-        } else {
-            console.log('[GlitchArt] Loading html2canvas dependency...');
-            const script = document.createElement('script');
-            script.src = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
-            script.onload = main;
-            script.onerror = () => console.error('[GlitchArt] CRITICAL: Failed to load html2canvas. Effects requiring it will not work.');
-            document.head.appendChild(script);
-        }
-    };
-
-    // --- 2. MAIN LIBRARY AND ACTIVATOR ---
+    // --- 1. MAIN LIBRARY AND ACTIVATOR (NO DEPENDENCIES NEEDED) ---
     const main = () => {
-        console.log('[GlitchArt] Dependency loaded. Initializing effects library.');
+        console.log('[GlitchArt] Initializing dependency-free effects library.');
 
         if (window.GlitchArt && window.GlitchArt.isActive) {
             console.log('[GlitchArt] Library already active. Halting re-initialization.');
@@ -64,15 +43,34 @@
             .fake-cursor { position: fixed; width: 20px; height: 20px; background: white; border: 2px solid black; clip-path: polygon(0 0, 0 16px, 6px 12px, 9px 20px, 11px 19px, 8px 11px, 16px 11px); z-index: 2147483647; pointer-events: none; opacity: 0; transform: translate(-2px, -2px); will-change: transform, opacity; }
             .fake-cursor.active { opacity: 1; }
             .fake-selection { position: absolute; background: rgba(0, 120, 255, 0.3); pointer-events: none; z-index: 2147483646; }
-            .rgb-split-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999999; animation: rgb-split-anim 0.6s ease-in-out; }
-            @keyframes rgb-split-anim { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
-            .rgb-channel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; }
-            .rgb-channel-r { mix-blend-mode: screen; filter: sepia(1) hue-rotate(310deg) saturate(6) brightness(1.1); animation: rgb-r 0.6s infinite; }
-            .rgb-channel-g { mix-blend-mode: screen; filter: sepia(1) hue-rotate(90deg) saturate(4) brightness(1.1); animation: rgb-g 0.6s infinite; }
-            .rgb-channel-b { mix-blend-mode: screen; filter: sepia(1) hue-rotate(180deg) saturate(5) brightness(1.1); animation: rgb-b 0.6s infinite; }
-            @keyframes rgb-r { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(-15px, 3px); } 66% { transform: translate(-10px, -5px); } }
-            @keyframes rgb-g { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(3px, 8px); } 66% { transform: translate(-2px, 12px); } }
-            @keyframes rgb-b { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(12px, -4px); } 66% { transform: translate(15px, 2px); } }
+            
+            /* --- NEW: Universal RGB Shadow Glitch --- */
+            body.universal-shadow-glitch * {
+                animation: universal-shadow-glitch-anim 0.5s ease-in-out forwards;
+            }
+            @keyframes universal-shadow-glitch-anim {
+                0% {
+                    transform: translate(0, 0);
+                    filter: drop-shadow(0 0 0 red) drop-shadow(0 0 0 lime) drop-shadow(0 0 0 blue);
+                }
+                25% {
+                    transform: translate(5px, -10px);
+                    filter: drop-shadow(15px 10px 0 red) drop-shadow(-20px -5px 0 lime) drop-shadow(5px 25px 0 blue);
+                }
+                50% {
+                    transform: translate(-10px, 8px);
+                    filter: drop-shadow(-25px 20px 0 red) drop-shadow(15px -15px 0 lime) drop-shadow(-10px -5px 0 blue);
+                }
+                75% {
+                    transform: translate(8px, -5px);
+                    filter: drop-shadow(30px -10px 0 red) drop-shadow(-5px 30px 0 lime) drop-shadow(20px 15px 0 blue);
+                }
+                100% {
+                    transform: translate(0, 0);
+                    filter: drop-shadow(0 0 0 red) drop-shadow(0 0 0 lime) drop-shadow(0 0 0 blue);
+                }
+            }
+
             .text-corrupt { position: relative; display: inline-block; }
             .text-corrupt::before, .text-corrupt::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; }
             .text-corrupt::before { left: 8px; text-shadow: -5px 0 #ff00ff, 3px 2px #ff0000; clip: rect(44px, 450px, 56px, 0); animation: corrupt-anim-1-MODIFIED 0.4s infinite linear alternate-reverse; }
@@ -156,7 +154,6 @@
             if (!button || button.dataset.isGlitched === 'true') return;
             button.dataset.isGlitched = 'true';
 
-            // Make button unclickable for 1 second on init
             button.style.pointerEvents = 'none';
             setTimeout(() => {
                 button.style.pointerEvents = '';
@@ -185,20 +182,16 @@
 
             const startErraticMovement = () => {
                 let baseOffsetX = 0, baseOffsetY = 0;
+                const shakeAmount = 20;
 
-                // --- NEW: Stronger Shake ---
-                const shakeAmount = 20; // Was 10
-
-                // --- NEW: Initial "Shock" Teleport ---
-                const shockRadius = 200; // Was 150
+                const shockRadius = 200;
                 const shockAngle = Math.random() * Math.PI * 2;
                 const shockDistance = Math.random() * shockRadius;
                 baseOffsetX = Math.cos(shockAngle) * shockDistance;
                 baseOffsetY = Math.sin(shockAngle) * shockDistance;
 
-                // --- NEW: Rapid Attack Teleportations (10 in the first second) ---
                 const attackTeleports = 10;
-                const attackDuration = 800; // Do them over 800ms
+                const attackDuration = 800;
                 for (let i = 0; i < attackTeleports; i++) {
                     setTimeout(() => {
                         const attackRadius = 150;
@@ -210,7 +203,6 @@
                     }, i * (attackDuration / attackTeleports));
                 }
 
-                // --- MODIFIED: Regular, faster teleporting after the initial attack ---
                 setTimeout(() => {
                     teleportIntervalId = setInterval(() => {
                         const teleportRadius = 150;
@@ -223,7 +215,7 @@
                         } else {
                             button.classList.remove('glitch-button-invert');
                         }
-                    }, 350); // Was 700
+                    }, 350);
                 }, attackDuration); 
 
                 const animate = () => {
@@ -257,10 +249,7 @@
 
                 if (unglitchedButtons.length > 0) {
                     const nextVictim = unglitchedButtons[Math.floor(Math.random() * unglitchedButtons.length)];
-                    console.log('[GlitchArt] Transferring button glitch to:', nextVictim);
                     applyButtonGlitch(nextVictim);
-                } else {
-                    console.log('[GlitchArt] All buttons are glitched. Transfer cycle complete.');
                 }
             };
             
@@ -412,33 +401,16 @@
                 }
             }, 500);
         };
-
-        const applyRGBSplit = () => {
-            html2canvas(document.body, {
-                logging: false, useCORS: true,
-                width: window.innerWidth, height: window.innerHeight,
-                x: window.scrollX, y: window.scrollY
-            }).then(canvas => {
-                const imgData = canvas.toDataURL();
-                const container = document.createElement('div');
-                container.className = 'rgb-split-container';
-
-                const fragment = document.createDocumentFragment();
-                ['r', 'g', 'b'].forEach(channel => {
-                    const layer = document.createElement('div');
-                    layer.className = `rgb-channel rgb-channel-${channel}`;
-                    layer.style.backgroundImage = `url(${imgData})`;
-                    fragment.appendChild(layer);
-                });
-                container.appendChild(fragment);
-                document.body.appendChild(container);
-
-                setTimeout(() => {
-                    if (document.body.contains(container)) {
-                        document.body.removeChild(container);
-                    }
-                }, 600);
-            }).catch(err => console.log('RGB Split error:', err));
+        
+        const applyUniversalShadowGlitch = () => {
+            const body = document.body;
+            if (body.classList.contains('universal-shadow-glitch')) return;
+            
+            body.classList.add('universal-shadow-glitch');
+            
+            setTimeout(() => {
+                body.classList.remove('universal-shadow-glitch');
+            }, 500); // Must match animation duration
         };
 
         const applyLegacyTextCorruption = () => {
@@ -637,7 +609,7 @@
             stackGlitch: applyStackGlitch,
             imageStack: applyImageStack,
             ghostCursor: animateGhostCursor,
-            rgbSplit: applyRGBSplit,
+            rgbSplit: applyUniversalShadowGlitch,
             legacyTextCorrupt: applyLegacyTextCorruption,
             scrollWarp: applyScrollWarp,
             buttonGlitch: applyButtonGlitch,
@@ -647,7 +619,7 @@
             stackGlitch: { func: window.GlitchArt.stackGlitch, cooldown: 11230, chance: 0.7, lastRun: 0 },
             imageStack: { func: window.GlitchArt.imageStack, cooldown: 9050, chance: 0.7, lastRun: 0 },
             legacyTextCorrupt: { func: window.GlitchArt.legacyTextCorrupt, cooldown: 4400, chance: 0.8, lastRun: 0 },
-            rgbSplit: { func: window.GlitchArt.rgbSplit, cooldown: 20140, chance: 0.7, lastRun: 0 },
+            rgbSplit: { func: window.GlitchArt.rgbSplit, cooldown: 18000, chance: 0.8, lastRun: 0 },
             scrollWarp: { func: window.GlitchArt.scrollWarp, cooldown: 22482, chance: 0.6, lastRun: 0 },
             ghostCursor: { func: window.GlitchArt.ghostCursor, cooldown: 13333, chance: 0.75, lastRun: 0 },
         };
@@ -720,6 +692,6 @@
         }
     };
 
-    initialize();
+    main();
 
 })(window);
