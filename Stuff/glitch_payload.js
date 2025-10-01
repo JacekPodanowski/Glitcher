@@ -1,5 +1,5 @@
 /**
- * Enhanced Glitch Art Effects Payload v6.1 (Complete & Optimized)
+ * Enhanced Glitch Art Effects Payload v6.6 (Complete & Optimized)
  * For Educational & Artistic Use Only
  *
  * This version is a complete, self-contained file with all functions fully implemented.
@@ -9,9 +9,14 @@
  * - Added a "scroll reversal" effect to hijack user scrolling.
  * - All previous fixes (tab visibility, cursor hiding) are included.
  *
- * MODIFIED based on user request (v11):
- * - Stack Glitch layer count is now dynamic: 1 element (7-100), subset (7-30), all (7-14).
- * - "Constant" mode now lasts longer (1.5s) and has wider spacing (2.5x multiplier).
+ * MODIFIED based on user request (v17):
+ * - Text Glitch Rework:
+ *   - The effect now targets only one text element at a time.
+ *   - This single glitched text "moves" to a new random element every 1-5 seconds.
+ * - Button Glitch Fixes:
+ *   - Buttons now retain their exact width and height after being teleported.
+ *   - Teleportation radius reduced to 100px.
+ *   - Buttons are now moved to be a direct child of the <body> when teleported to guarantee they appear on top of all other elements.
  */
 
 (function(window) {
@@ -42,15 +47,11 @@
         style.textContent = `
             /* MODIFIED KEYFRAME TO USE A PROGRESSIVE MULTIPLIER */
             @keyframes stack-glitch { 
-                0%, 100% { transform: translate(0, 0); } 
-                20% { transform: translate(calc(var(--glitch-dx) * var(--glitch-multiplier)), calc(var(--glitch-dy) * var(--glitch-multiplier))); } 
-                40% { transform: translate(calc(var(--glitch-dx) * -1 * var(--glitch-multiplier)), calc(var(--glitch-dy) * -1 * var(--glitch-multiplier))); } 
-                60% { transform: translate(calc(var(--glitch-dx) * 0.7 * var(--glitch-multiplier)), calc(var(--glitch-dy) * -0.4 * var(--glitch-multiplier))); } 
-                80% { transform: translate(calc(var(--glitch-dx) * -0.4 * var(--glitch-multiplier)), calc(var(--glitch-dy) * 0.7 * var(--glitch-multiplier))); } 
+                0%, 100% { transform: translate(0, 0); opacity: 1; } 
+                50% { transform: translate(calc(var(--glitch-dx) * var(--glitch-multiplier)), calc(var(--glitch-dy) * var(--glitch-multiplier))); opacity: 0.5; }
             }
-            .glitch-stack-container { position: relative; display: inline-block; z-index: 1; }
-            /* MODIFICATION: Animation duration is now controlled by a CSS variable */
-            .glitch-stack-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; filter: hue-rotate(var(--hue-shift, 0deg)) brightness(0.8); animation: stack-glitch var(--glitch-duration, 0.8s) ease-in-out forwards; animation-delay: var(--delay, 0s); opacity: 1; }
+            .glitch-stack-container { position: relative; z-index: 1; }
+            .glitch-stack-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; filter: hue-rotate(var(--hue-shift, 0deg)) brightness(0.8); animation: stack-glitch var(--glitch-duration, 1.2s) ease-in-out forwards; animation-delay: var(--delay, 0s); opacity: 1; }
             .glitch-image-container { position: relative; display: inline-block; overflow: visible; }
             .glitch-image-stack { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
             .glitch-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; mix-blend-mode: screen; opacity: 0.8; }
@@ -65,9 +66,6 @@
             .fake-cursor { position: fixed; width: 20px; height: 20px; background: white; border: 2px solid black; clip-path: polygon(0 0, 0 16px, 6px 12px, 9px 20px, 11px 19px, 8px 11px, 16px 11px); z-index: 2147483647; pointer-events: none; opacity: 0; transform: translate(-2px, -2px); will-change: transform, opacity; }
             .fake-cursor.active { opacity: 1; }
             .fake-selection { position: absolute; background: rgba(0, 120, 255, 0.3); pointer-events: none; z-index: 2147483646; }
-            .datamosh-container { position: relative; overflow: hidden; }
-            .datamosh-slice { position: absolute; width: 100%; height: 10px; background-attachment: fixed; animation: datamosh-shift 0.4s forwards; }
-            @keyframes datamosh-shift { 50% { transform: translateX(calc(var(--rand-shift, 0) * 30px - 15px)); } }
             .rgb-split-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999999; animation: rgb-split-anim 0.6s ease-in-out; }
             @keyframes rgb-split-anim { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
             .rgb-channel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; }
@@ -83,86 +81,232 @@
             .text-corrupt::after { left: -8px; text-shadow: -5px 0 #00ffff, -3px 2px #00ff00; clip: rect(44px, 450px, 56px, 0); animation: corrupt-anim-2-MODIFIED 0.4s infinite linear alternate-reverse; }
             @keyframes corrupt-anim-1 { 0% { clip: rect(42px, 9999px, 44px, 0); left: 8px; } 10% { clip: rect(12px, 9999px, 59px, 0); left: -6px; } 20% { clip: rect(66px, 9999px, 89px, 0); left: 10px; } 30% { clip: rect(17px, 9999px, 34px, 0); left: -8px; } 40% { clip: rect(87px, 9999px, 40px, 0); left: 12px; } 50% { clip: rect(50px, 9999px, 75px, 0); left: -10px; } 60% { clip: rect(23px, 9999px, 55px, 0); left: 9px; } 70% { clip: rect(70px, 9999px, 95px, 0); left: -7px; } 80% { clip: rect(8px, 9999px, 28px, 0); left: 11px; } 90% { clip: rect(45px, 9999px, 60px, 0); left: -9px; } 100% { clip: rect(32px, 9999px, 48px, 0); left: 8px; } }
             @keyframes corrupt-anim-2 { 0% { clip: rect(65px, 9999px, 100px, 0); left: -10px; } 10% { clip: rect(25px, 9999px, 45px, 0); left: 8px; } 20% { clip: rect(78px, 9999px, 88px, 0); left: -12px; } 30% { clip: rect(5px, 9999px, 15px, 0); left: 9px; } 40% { clip: rect(52px, 9999px, 72px, 0); left: -8px; } 50% { clip: rect(38px, 9999px, 58px, 0); left: 11px; } 60% { clip: rect(82px, 9999px, 92px, 0); left: -9px; } 70% { clip: rect(15px, 9999px, 35px, 0); left: 10px; } 80% { clip: rect(60px, 9999px, 80px, 0); left: -11px; } 90% { clip: rect(28px, 9999px, 48px, 0); left: 8px; } 100% { clip: rect(70px, 9999px, 85px, 0); left: -10px; } }
+            
+            /* --- Button Glitch Styles (v4) --- */
+            @keyframes teleport-shake {
+                0%, 100% { transform: translate(0, 0); }
+                10%, 30%, 50%, 70%, 90% { transform: translate(-6px, 4px); }
+                20%, 40%, 60%, 80% { transform: translate(6px, -4px); }
+            }
+            @keyframes button-collapse {
+                to { transform: scale(0); opacity: 0; }
+            }
+            .glitch-button-shaking {
+                animation: teleport-shake 0.3s linear infinite;
+                position: fixed;
+                z-index: 2147483647; /* Max z-index to ensure visibility */
+            }
+            .glitch-button-disappear {
+                animation: button-collapse 0.3s ease-in forwards;
+            }
         `;
         document.head.appendChild(style);
 
         // --- All Glitch Effect Functions ---
+        
+        const glitchCharMap = {
+            'a': ['@', '4', 'λ'], 'e': ['3', '€'], 'i': ['1', '!', '|'], 'o': ['0', 'ø', '°'], 'u': ['µ', 'v'],
+            's': ['5', '$', '§'], 't': ['7', '+'], 'l': ['1', '|'], 'g': ['6', '9'], 'b': ['8', 'ß'], 'c': ['(', '<'],
+            'z': ['2'], 'r': ['®'], 'x': ['%'], 'w': ['ω'], 'h': ['ħ'], 'k': ['κ'],
+            'A': ['∀', 'Δ'], 'E': ['∃'], 'I': ['Ⅰ'], 'O': ['∅'], 'S': ['Σ'], 'T': ['⊤']
+        };
+
+        const applyTextGlitch = (element) => {
+            if (!element || !element.textContent.trim()) return;
+
+            const originalText = element.dataset.originalText || element.textContent;
+            element.dataset.originalText = originalText;
+
+            const glitchChance = 0.4;
+            let glitchedText = '';
+            for (const char of originalText) {
+                const lowerChar = char.toLowerCase();
+                if (glitchCharMap[char] || glitchCharMap[lowerChar]) {
+                    if (Math.random() < glitchChance) {
+                        const replacements = glitchCharMap[char] || glitchCharMap[lowerChar];
+                        glitchedText += replacements[Math.floor(Math.random() * replacements.length)];
+                    } else {
+                        glitchedText += char;
+                    }
+                } else {
+                    glitchedText += char;
+                }
+            }
+            element.textContent = glitchedText;
+        };
+        
+        const manageMovingTextGlitch = () => {
+            // Find and restore the previously glitched element
+            const previous = document.querySelector('[data-is-currently-glitched="true"]');
+            if (previous && previous.dataset.originalText) {
+                previous.textContent = previous.dataset.originalText;
+                delete previous.dataset.isCurrentlyGlitched;
+                delete previous.dataset.originalText;
+            }
+
+            // Find a new victim
+            const elements = Array.from(document.querySelectorAll('p, h1, h2, h3, h4, span, a, li'));
+            const validElements = elements.filter(el => el.textContent.trim().length > 5);
+            if (validElements.length > 0) {
+                const target = validElements[Math.floor(Math.random() * validElements.length)];
+                target.dataset.isCurrentlyGlitched = 'true';
+                applyTextGlitch(target);
+            }
+
+            const nextInterval = Math.random() * 4000 + 1000; // 1 to 5 seconds
+            setTimeout(manageMovingTextGlitch, nextInterval);
+        };
+
+        const applyButtonGlitch = (button) => {
+            if (!button || button.dataset.isGlitched === 'true') return;
+            button.dataset.isGlitched = 'true';
+
+            let clickState = 0;
+            const originalOnclick = button.onclick;
+            const originalText = button.textContent;
+            button.onclick = null;
+
+            let originalParent = button.parentNode;
+            let originalNextSibling = button.nextSibling;
+            const originalStyles = {
+                position: button.style.position,
+                top: button.style.top,
+                left: button.style.left,
+                zIndex: button.style.zIndex,
+                transform: button.style.transform,
+                width: button.style.width,
+                height: button.style.height,
+            };
+
+            const performAction = (event) => {
+                if (originalOnclick) {
+                    originalOnclick.call(button, event);
+                } else if (button.tagName === 'A' && button.href) {
+                    if (button.target === '_blank') window.open(button.href);
+                    else window.location.href = button.href;
+                }
+            };
+
+            const transferGlitch = () => {
+                const allPossibleButtons = Array.from(document.querySelectorAll('button, a.button, [role="button"]'));
+                const unglitchedButtons = allPossibleButtons.filter(b => b.dataset.isGlitched !== 'true');
+
+                if (unglitchedButtons.length > 0) {
+                    const nextVictim = unglitchedButtons[Math.floor(Math.random() * unglitchedButtons.length)];
+                    console.log('[GlitchArt] Transferring button glitch to:', nextVictim);
+                    applyButtonGlitch(nextVictim);
+                } else {
+                    console.log('[GlitchArt] All buttons are glitched. Transfer cycle complete.');
+                }
+            };
+            
+            const clickHandler = (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (clickState === 0) {
+                    const rect = button.getBoundingClientRect();
+                    
+                    originalParent.insertBefore(document.createComment(''), button);
+
+                    const maxOffset = 100;
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * maxOffset;
+                    const offsetX = Math.cos(angle) * distance;
+                    const offsetY = Math.sin(angle) * distance;
+                    const idealTop = rect.top + offsetY;
+                    const idealLeft = rect.left + offsetX;
+
+                    const newTop = Math.max(0, Math.min(idealTop, window.innerHeight - rect.height));
+                    const newLeft = Math.max(0, Math.min(idealLeft, window.innerWidth - rect.width));
+                    
+                    document.body.appendChild(button); // Move to body for top z-index context
+                    button.classList.add('glitch-button-shaking');
+                    button.style.position = 'fixed';
+                    button.style.width = `${rect.width}px`; // Preserve original dimensions
+                    button.style.height = `${rect.height}px`; // Preserve original dimensions
+                    button.style.top = `${newTop}px`;
+                    button.style.left = `${newLeft}px`;
+                    
+                    applyTextGlitch(button);
+
+                    clickState = 1;
+                } else if (clickState === 1) {
+                    button.classList.remove('glitch-button-shaking');
+                    button.classList.add('glitch-button-disappear');
+
+                    const onAnimationEnd = () => {
+                        performAction(event);
+
+                        setTimeout(() => {
+                            button.classList.remove('glitch-button-disappear');
+                            originalParent.insertBefore(button, originalNextSibling); // Re-insert in original position
+                            Object.assign(button.style, originalStyles); // Restore all original inline styles
+                            
+                            button.textContent = originalText;
+                            
+                            button.removeEventListener('click', clickHandler);
+                            button.onclick = originalOnclick;
+                            delete button.dataset.isGlitched;
+                            transferGlitch();
+                        }, 1000);
+                        button.removeEventListener('animationend', onAnimationEnd);
+                    };
+                    button.addEventListener('animationend', onAnimationEnd);
+                }
+            };
+            
+            button.addEventListener('click', clickHandler);
+        };
 
         const applyStackGlitch = () => {
-            const elements = Array.from(document.body.querySelectorAll('p, h1, h2, h3, span, a, li, blockquote'));
-            const totalElements = elements.length;
-            if (totalElements === 0) return;
+            const potentialTargets = Array.from(document.querySelectorAll('section, nav, header, footer, main, article, div'));
+            const validTargets = potentialTargets.filter(el => {
+                if (!el.parentNode) return false;
+                const rect = el.getBoundingClientRect();
+                return rect.height > 100 && rect.width > 100 && el.childElementCount > 0;
+            });
+
+            if (validTargets.length === 0) return;
+
+            const el = validTargets[Math.floor(Math.random() * validTargets.length)];
+            const numLayers = Math.floor(Math.random() * 11) + 10;
+            const duration = 1200;
 
             const angle = Math.random() * Math.PI * 2;
-            const distance = 3 + Math.random() * 7;
+            const distance = Math.random() * 4 + 3;
             const dx = Math.cos(angle) * distance;
             const dy = Math.sin(angle) * distance;
-            const isProgressive = Math.random() < 0.5;
 
-            let numElements;
-            const chance = Math.random();
-            if (chance < 0.20) {
-                numElements = totalElements;
-            } else if (chance < 0.70) {
-                numElements = ~~(totalElements * (0.2 + Math.random() * 0.3));
-            } else {
-                numElements = 1;
+            if (el.closest('.glitch-stack-container')) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'glitch-stack-container';
+            el.parentNode.insertBefore(wrapper, el);
+            wrapper.appendChild(el);
+
+            const fragment = document.createDocumentFragment();
+            for (let i = 1; i <= numLayers; i++) {
+                const clone = el.cloneNode(true);
+                clone.classList.add('glitch-stack-layer');
+                const cloneStyle = clone.style;
+                cloneStyle.setProperty('--glitch-dx', `${dx}px`);
+                cloneStyle.setProperty('--glitch-dy', `${dy}px`);
+                cloneStyle.setProperty('--glitch-multiplier', i);
+                cloneStyle.setProperty('--delay', `${i * 0.035}s`);
+                cloneStyle.setProperty('--hue-shift', `${(i * 20) % 360}deg`);
+                cloneStyle.setProperty('--glitch-duration', `${duration / 1000}s`);
+                cloneStyle.zIndex = i;
+                fragment.appendChild(clone);
             }
+            wrapper.appendChild(fragment);
 
-            // MODIFICATION: Set numLayers based on the number of elements being affected.
-            let numLayers;
-            if (numElements === 1) {
-                numLayers = ~~(Math.random() * 94) + 20; // 7 to 100
-            } else if (numElements === totalElements) {
-                numLayers = ~~(Math.random() * 8) + 7;  // 7 to 14
-            } else {
-                numLayers = ~~(Math.random() * 20) + 7; // 7 to 30
-            }
-
-            // MODIFICATION: Define variables for the mode's behavior
-            let duration = 880;
-            let multiplierBase = 2.5; // This will be used if not progressive
-            if (!isProgressive) {
-                duration = 1200;       // Longer duration for constant mode
-            }
-            
-            const shuffled = elements.sort(() => 0.5 - Math.random());
-            const selected = shuffled.slice(0, numElements);
-            
-            selected.forEach(el => {
-                const rect = el.getBoundingClientRect();
-                if (rect.width < 10 || rect.height < 10 || el.closest('.glitch-stack-container')) return;
-
-                const wrapper = document.createElement('div');
-                wrapper.className = 'glitch-stack-container';
-                el.parentNode.insertBefore(wrapper, el);
-                wrapper.appendChild(el);
-                
-                const fragment = document.createDocumentFragment();
-                for (let i = 1; i <= numLayers; i++) {
-                    const clone = el.cloneNode(true);
-                    clone.classList.add('glitch-stack-layer');
-                    const cloneStyle = clone.style;
-                    cloneStyle.setProperty('--glitch-dx', `${dx}px`);
-                    cloneStyle.setProperty('--glitch-dy', `${dy}px`);
-                    const multiplier = isProgressive ? i * 0.2 : multiplierBase;
-                    cloneStyle.setProperty('--glitch-multiplier', multiplier);
-                    cloneStyle.setProperty('--delay', `${i * 0.03}s`);
-                    cloneStyle.setProperty('--hue-shift', `${~~(Math.random() * 360)}deg`);
-                    cloneStyle.setProperty('--glitch-duration', `${duration / 1000}s`); // Set duration
-                    cloneStyle.zIndex = i;
-                    fragment.appendChild(clone);
+            setTimeout(() => {
+                if (wrapper.parentNode) {
+                    wrapper.parentNode.insertBefore(el, wrapper);
+                    wrapper.parentNode.removeChild(wrapper);
                 }
-                
-                wrapper.appendChild(fragment);
-
-                setTimeout(() => {
-                    if (wrapper.parentNode) {
-                        wrapper.parentNode.insertBefore(el, wrapper);
-                        wrapper.parentNode.removeChild(wrapper);
-                    }
-                }, duration); // Use the mode-specific duration for cleanup
-            });
+            }, duration + numLayers * 35);
         };
 
         const applyImageStack = () => {
@@ -171,6 +315,8 @@
             if (numImages === 0) return;
 
             const img = images[~~(Math.random() * numImages)];
+            if (!img.parentNode) return;
+
             const wrapper = document.createElement('div');
             wrapper.className = 'glitch-image-container';
             const wrapperStyle = wrapper.style;
@@ -217,43 +363,6 @@
             }, 500);
         };
 
-        const executeDatamosh = (target, rect) => {
-            html2canvas(target, { logging: false, useCORS: true }).then(canvas => {
-                const imgData = canvas.toDataURL();
-                const container = document.createElement('div');
-                container.style.cssText = `position: fixed; z-index: 9999; top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px; pointer-events: none;`;
-                
-                const fragment = document.createDocumentFragment();
-                for (let i = 0, h = rect.height; i < h; i += 10) {
-                    const slice = document.createElement('div');
-                    slice.classList.add('datamosh-slice');
-                    const sliceStyle = slice.style;
-                    sliceStyle.top = `${i}px`;
-                    sliceStyle.backgroundImage = `url(${imgData})`;
-                    sliceStyle.backgroundPosition = `0px -${i}px`;
-                    sliceStyle.setProperty('--rand-shift', Math.random());
-                    fragment.appendChild(slice);
-                }
-                container.appendChild(fragment);
-                document.body.appendChild(container);
-
-                setTimeout(() => {
-                    if (document.body.contains(container)) {
-                        document.body.removeChild(container);
-                    }
-                }, 400);
-            }).catch(err => console.log('Datamosh error:', err));
-        };
-        
-        const applyDatamosh = () => {
-            const elements = document.body.querySelectorAll('div:not(:empty), section, main, article');
-            if (elements.length === 0) return;
-            const target = elements[~~(Math.random() * elements.length)];
-            const rect = target.getBoundingClientRect();
-            if (rect.height < 50 || rect.width < 50) return;
-            executeDatamosh(target, rect);
-        };
-
         const applyRGBSplit = () => {
             html2canvas(document.body, {
                 logging: false, useCORS: true,
@@ -282,7 +391,7 @@
             }).catch(err => console.log('RGB Split error:', err));
         };
 
-        const applyTextCorruption = () => {
+        const applyLegacyTextCorruption = () => {
             const textElements = document.querySelectorAll('h1, h2, h3, p, a, button, span, li');
             if (textElements.length === 0) return;
             const el = textElements[~~(Math.random() * textElements.length)];
@@ -373,8 +482,8 @@
                             setTimeout(() => {
                                 const range = document.createRange(), selection = window.getSelection();
                                 try {
-                                    const textNode = targetEl.childNodes[0];
-                                    if (textNode && textNode.nodeType === 3) {
+                                    const textNode = Array.from(targetEl.childNodes).find(n => n.nodeType === 3);
+                                    if (textNode) {
                                         const len = textNode.textContent.length;
                                         const start = ~~(Math.random() * (len / 2));
                                         const end = Math.min(start + ~~(Math.random() * (len / 2)) + 5, len);
@@ -477,19 +586,18 @@
             isActive: true,
             stackGlitch: applyStackGlitch,
             imageStack: applyImageStack,
-            datamosh: applyDatamosh,
             ghostCursor: animateGhostCursor,
             rgbSplit: applyRGBSplit,
-            textCorrupt: applyTextCorruption,
+            legacyTextCorrupt: applyLegacyTextCorruption,
             scrollWarp: applyScrollWarp,
+            buttonGlitch: applyButtonGlitch,
         };
         
         const effectConfig = {
             stackGlitch: { func: window.GlitchArt.stackGlitch, cooldown: 11230, chance: 0.7, lastRun: 0 },
             imageStack: { func: window.GlitchArt.imageStack, cooldown: 9050, chance: 0.7, lastRun: 0 },
-            textCorrupt: { func: window.GlitchArt.textCorrupt, cooldown: 4400, chance: 0.8, lastRun: 0 },
+            legacyTextCorrupt: { func: window.GlitchArt.legacyTextCorrupt, cooldown: 4400, chance: 0.8, lastRun: 0 },
             rgbSplit: { func: window.GlitchArt.rgbSplit, cooldown: 20140, chance: 0.7, lastRun: 0 },
-            datamosh: { func: window.GlitchArt.datamosh, cooldown: 16380, chance: 0.7, lastRun: 0 },
             scrollWarp: { func: window.GlitchArt.scrollWarp, cooldown: 22482, chance: 0.6, lastRun: 0 },
             ghostCursor: { func: window.GlitchArt.ghostCursor, cooldown: 13333, chance: 0.75, lastRun: 0 },
         };
@@ -510,8 +618,12 @@
                 const effect = effectConfig[key];
                 if (currentTime - effect.lastRun > effect.cooldown) {
                     if (Math.random() < effect.chance) {
-                        effect.func();
-                        effect.lastRun = currentTime;
+                        try {
+                           effect.func();
+                           effect.lastRun = currentTime;
+                        } catch (e) {
+                           console.error(`[GlitchArt] Error in effect '${key}':`, e);
+                        }
                     }
                 }
             }
@@ -525,10 +637,7 @@
             } else {
                 console.log('[GlitchArt] Tab is now active. Restarting cooldowns for a moment of peace.');
                 const now = performance.now();
-                const effectKeys = Object.keys(effectConfig);
-                for (let i = 0, len = effectKeys.length; i < len; i++) {
-                    effectConfig[effectKeys[i]].lastRun = now;
-                }
+                Object.values(effectConfig).forEach(effect => effect.lastRun = now);
                 lastFrameTime = now;
                 glitchLoop(now);
             }
@@ -536,15 +645,30 @@
         
         console.log('[GlitchArt] Activating optimized scheduler and event listeners.');
         glitchLoop(performance.now());
+        
+        console.log('[GlitchArt] Activating moving text glitch loop.');
+        manageMovingTextGlitch();
+
         window.addEventListener('wheel', handleScrollReversal, { passive: false });
-        document.body.addEventListener('click', () => {
-             if (isTabActive && Math.random() < 0.15) window.GlitchArt.datamosh();
-        });
         
         console.log('[GlitchArt] Activating typing listeners.');
         document.querySelectorAll('input[type="text"], textarea').forEach(el => {
             el.addEventListener('input', handleTypingGlitch);
         });
+
+        // --- Apply initial button glitch to 50% of buttons ---
+        console.log('[GlitchArt] Searching for buttons to apply the initial teleport glitch...');
+        const allButtons = Array.from(document.querySelectorAll('button, a.button, [role="button"]'));
+        if (allButtons.length > 0) {
+            const numToGlitch = Math.max(1, Math.floor(allButtons.length / 2));
+            const shuffledButtons = allButtons.sort(() => 0.5 - Math.random());
+            const initialVictims = shuffledButtons.slice(0, numToGlitch);
+            
+            console.log(`[GlitchArt] Applying initial glitch to ${numToGlitch} out of ${allButtons.length} buttons.`);
+            initialVictims.forEach(button => {
+                window.GlitchArt.buttonGlitch(button);
+            });
+        }
     };
 
     initialize();
