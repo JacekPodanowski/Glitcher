@@ -269,8 +269,11 @@ switch ($choice) {
         Start-Process -FilePath "python.exe" -ArgumentList @($InjectorPyPath, $websiteUrl) -WindowStyle Hidden
 
         Write-Host ""
-        $completeLine = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "   INJECTOR LAUNCHED   " + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
+        $completeLine = [char]0x2588 + [char]0x2593 + [char]0x2592 + [char]0x2591 + "   INJECTOR BUILT   " + [char]0x2591 + [char]0x2592 + [char]0x2593 + [char]0x2588
         Write-Centered -Text $completeLine -IsLogo
+
+        Write-Glitchy -Text ">> Launching ..."
+        Start-Sleep -Milliseconds 3000
     }
     '2' {
         Write-Host ""

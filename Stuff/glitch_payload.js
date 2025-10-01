@@ -1,5 +1,5 @@
 /**
- * Enhanced Glitch Art Effects Payload v6.6 (Complete & Optimized)
+ * Enhanced Glitch Art Effects Payload v6.12 (Complete & Optimized)
  * For Educational & Artistic Use Only
  *
  * This version is a complete, self-contained file with all functions fully implemented.
@@ -9,14 +9,12 @@
  * - Added a "scroll reversal" effect to hijack user scrolling.
  * - All previous fixes (tab visibility, cursor hiding) are included.
  *
- * MODIFIED based on user request (v17):
- * - Text Glitch Rework:
- *   - The effect now targets only one text element at a time.
- *   - This single glitched text "moves" to a new random element every 1-5 seconds.
- * - Button Glitch Fixes:
- *   - Buttons now retain their exact width and height after being teleported.
- *   - Teleportation radius reduced to 100px.
- *   - Buttons are now moved to be a direct child of the <body> when teleported to guarantee they appear on top of all other elements.
+ * MODIFIED based on user request (v23):
+ * - Button Glitch Overhaul:
+ *   - The first teleport is now a "shock" jump up to 200px.
+ *   - The button is unclickable for the first 1 second of the effect.
+ *   - A rapid attack of 10 teleports occurs within the first second.
+ *   - Regular teleporting is faster and the shake effect is 2x stronger.
  */
 
 (function(window) {
@@ -69,9 +67,9 @@
             .rgb-split-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999999; animation: rgb-split-anim 0.6s ease-in-out; }
             @keyframes rgb-split-anim { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
             .rgb-channel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; }
-            .rgb-channel-r { mix-blend-mode: screen; filter: sepia(1) hue-rotate(310deg) saturate(6); animation: rgb-r 0.6s infinite; }
-            .rgb-channel-g { mix-blend-mode: screen; filter: sepia(1) hue-rotate(90deg) saturate(4); animation: rgb-g 0.6s infinite; }
-            .rgb-channel-b { mix-blend-mode: screen; filter: sepia(1) hue-rotate(180deg) saturate(5); animation: rgb-b 0.6s infinite; }
+            .rgb-channel-r { mix-blend-mode: screen; filter: sepia(1) hue-rotate(310deg) saturate(6) brightness(1.1); animation: rgb-r 0.6s infinite; }
+            .rgb-channel-g { mix-blend-mode: screen; filter: sepia(1) hue-rotate(90deg) saturate(4) brightness(1.1); animation: rgb-g 0.6s infinite; }
+            .rgb-channel-b { mix-blend-mode: screen; filter: sepia(1) hue-rotate(180deg) saturate(5) brightness(1.1); animation: rgb-b 0.6s infinite; }
             @keyframes rgb-r { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(-15px, 3px); } 66% { transform: translate(-10px, -5px); } }
             @keyframes rgb-g { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(3px, 8px); } 66% { transform: translate(-2px, 12px); } }
             @keyframes rgb-b { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(12px, -4px); } 66% { transform: translate(15px, 2px); } }
@@ -82,19 +80,18 @@
             @keyframes corrupt-anim-1 { 0% { clip: rect(42px, 9999px, 44px, 0); left: 8px; } 10% { clip: rect(12px, 9999px, 59px, 0); left: -6px; } 20% { clip: rect(66px, 9999px, 89px, 0); left: 10px; } 30% { clip: rect(17px, 9999px, 34px, 0); left: -8px; } 40% { clip: rect(87px, 9999px, 40px, 0); left: 12px; } 50% { clip: rect(50px, 9999px, 75px, 0); left: -10px; } 60% { clip: rect(23px, 9999px, 55px, 0); left: 9px; } 70% { clip: rect(70px, 9999px, 95px, 0); left: -7px; } 80% { clip: rect(8px, 9999px, 28px, 0); left: 11px; } 90% { clip: rect(45px, 9999px, 60px, 0); left: -9px; } 100% { clip: rect(32px, 9999px, 48px, 0); left: 8px; } }
             @keyframes corrupt-anim-2 { 0% { clip: rect(65px, 9999px, 100px, 0); left: -10px; } 10% { clip: rect(25px, 9999px, 45px, 0); left: 8px; } 20% { clip: rect(78px, 9999px, 88px, 0); left: -12px; } 30% { clip: rect(5px, 9999px, 15px, 0); left: 9px; } 40% { clip: rect(52px, 9999px, 72px, 0); left: -8px; } 50% { clip: rect(38px, 9999px, 58px, 0); left: 11px; } 60% { clip: rect(82px, 9999px, 92px, 0); left: -9px; } 70% { clip: rect(15px, 9999px, 35px, 0); left: 10px; } 80% { clip: rect(60px, 9999px, 80px, 0); left: -11px; } 90% { clip: rect(28px, 9999px, 48px, 0); left: 8px; } 100% { clip: rect(70px, 9999px, 85px, 0); left: -10px; } }
             
-            /* --- Button Glitch Styles (v4) --- */
-            @keyframes teleport-shake {
-                0%, 100% { transform: translate(0, 0); }
-                10%, 30%, 50%, 70%, 90% { transform: translate(-6px, 4px); }
-                20%, 40%, 60%, 80% { transform: translate(6px, -4px); }
-            }
+            /* --- Button Glitch Styles (v7) --- */
             @keyframes button-collapse {
                 to { transform: scale(0); opacity: 0; }
             }
-            .glitch-button-shaking {
-                animation: teleport-shake 0.3s linear infinite;
-                position: fixed;
-                z-index: 2147483647; /* Max z-index to ensure visibility */
+            .glitch-button-active {
+                position: absolute;
+                z-index: 2147483647;
+                box-sizing: border-box !important;
+                transition: filter 0.1s;
+            }
+            .glitch-button-invert {
+                filter: invert(1);
             }
             .glitch-button-disappear {
                 animation: button-collapse 0.3s ease-in forwards;
@@ -136,7 +133,6 @@
         };
         
         const manageMovingTextGlitch = () => {
-            // Find and restore the previously glitched element
             const previous = document.querySelector('[data-is-currently-glitched="true"]');
             if (previous && previous.dataset.originalText) {
                 previous.textContent = previous.dataset.originalText;
@@ -144,22 +140,27 @@
                 delete previous.dataset.originalText;
             }
 
-            // Find a new victim
             const elements = Array.from(document.querySelectorAll('p, h1, h2, h3, h4, span, a, li'));
-            const validElements = elements.filter(el => el.textContent.trim().length > 5);
+            const validElements = elements.filter(el => el.textContent.trim().length > 5 && !el.closest('button, a.button, [role="button"]'));
             if (validElements.length > 0) {
                 const target = validElements[Math.floor(Math.random() * validElements.length)];
                 target.dataset.isCurrentlyGlitched = 'true';
                 applyTextGlitch(target);
             }
 
-            const nextInterval = Math.random() * 4000 + 1000; // 1 to 5 seconds
+            const nextInterval = Math.random() * 4000 + 1000;
             setTimeout(manageMovingTextGlitch, nextInterval);
         };
 
         const applyButtonGlitch = (button) => {
             if (!button || button.dataset.isGlitched === 'true') return;
             button.dataset.isGlitched = 'true';
+
+            // Make button unclickable for 1 second on init
+            button.style.pointerEvents = 'none';
+            setTimeout(() => {
+                button.style.pointerEvents = '';
+            }, 1000);
 
             let clickState = 0;
             const originalOnclick = button.onclick;
@@ -176,6 +177,69 @@
                 transform: button.style.transform,
                 width: button.style.width,
                 height: button.style.height,
+                pointerEvents: button.style.pointerEvents,
+            };
+            
+            let moveAnimationId = null;
+            let teleportIntervalId = null;
+
+            const startErraticMovement = () => {
+                let baseOffsetX = 0, baseOffsetY = 0;
+
+                // --- NEW: Stronger Shake ---
+                const shakeAmount = 20; // Was 10
+
+                // --- NEW: Initial "Shock" Teleport ---
+                const shockRadius = 200; // Was 150
+                const shockAngle = Math.random() * Math.PI * 2;
+                const shockDistance = Math.random() * shockRadius;
+                baseOffsetX = Math.cos(shockAngle) * shockDistance;
+                baseOffsetY = Math.sin(shockAngle) * shockDistance;
+
+                // --- NEW: Rapid Attack Teleportations (10 in the first second) ---
+                const attackTeleports = 10;
+                const attackDuration = 800; // Do them over 800ms
+                for (let i = 0; i < attackTeleports; i++) {
+                    setTimeout(() => {
+                        const attackRadius = 150;
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = Math.random() * attackRadius;
+                        baseOffsetX = Math.cos(angle) * distance;
+                        baseOffsetY = Math.sin(angle) * distance;
+                        button.classList.toggle('glitch-button-invert', Math.random() < 0.5);
+                    }, i * (attackDuration / attackTeleports));
+                }
+
+                // --- MODIFIED: Regular, faster teleporting after the initial attack ---
+                setTimeout(() => {
+                    teleportIntervalId = setInterval(() => {
+                        const teleportRadius = 150;
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = Math.random() * teleportRadius;
+                        baseOffsetX = Math.cos(angle) * distance;
+                        baseOffsetY = Math.sin(angle) * distance;
+                        if (Math.random() < 0.4) {
+                            button.classList.add('glitch-button-invert');
+                        } else {
+                            button.classList.remove('glitch-button-invert');
+                        }
+                    }, 350); // Was 700
+                }, attackDuration); 
+
+                const animate = () => {
+                    const shakeX = (Math.random() - 0.5) * shakeAmount;
+                    const shakeY = (Math.random() - 0.5) * shakeAmount;
+                    button.style.transform = `translate(${baseOffsetX + shakeX}px, ${baseOffsetY + shakeY}px)`;
+                    moveAnimationId = requestAnimationFrame(animate);
+                };
+                animate();
+            };
+
+            const stopErraticMovement = () => {
+                cancelAnimationFrame(moveAnimationId);
+                clearInterval(teleportIntervalId);
+                button.style.transform = '';
+                button.classList.remove('glitch-button-invert');
             };
 
             const performAction = (event) => {
@@ -206,45 +270,31 @@
 
                 if (clickState === 0) {
                     const rect = button.getBoundingClientRect();
-                    
                     originalParent.insertBefore(document.createComment(''), button);
-
-                    const maxOffset = 100;
-                    const angle = Math.random() * Math.PI * 2;
-                    const distance = Math.random() * maxOffset;
-                    const offsetX = Math.cos(angle) * distance;
-                    const offsetY = Math.sin(angle) * distance;
-                    const idealTop = rect.top + offsetY;
-                    const idealLeft = rect.left + offsetX;
-
-                    const newTop = Math.max(0, Math.min(idealTop, window.innerHeight - rect.height));
-                    const newLeft = Math.max(0, Math.min(idealLeft, window.innerWidth - rect.width));
-                    
-                    document.body.appendChild(button); // Move to body for top z-index context
-                    button.classList.add('glitch-button-shaking');
-                    button.style.position = 'fixed';
-                    button.style.width = `${rect.width}px`; // Preserve original dimensions
-                    button.style.height = `${rect.height}px`; // Preserve original dimensions
-                    button.style.top = `${newTop}px`;
-                    button.style.left = `${newLeft}px`;
-                    
+                    const docTop = rect.top + window.scrollY;
+                    const docLeft = rect.left + window.scrollX;
+                    document.body.appendChild(button);
+                    button.classList.add('glitch-button-active');
+                    button.style.position = 'absolute';
+                    button.style.width = `${rect.width}px`;
+                    button.style.height = `${rect.height}px`;
+                    button.style.top = `${docTop}px`;
+                    button.style.left = `${docLeft}px`;
                     applyTextGlitch(button);
-
+                    startErraticMovement();
                     clickState = 1;
                 } else if (clickState === 1) {
-                    button.classList.remove('glitch-button-shaking');
+                    stopErraticMovement();
+                    button.classList.remove('glitch-button-active');
                     button.classList.add('glitch-button-disappear');
 
                     const onAnimationEnd = () => {
                         performAction(event);
-
                         setTimeout(() => {
                             button.classList.remove('glitch-button-disappear');
-                            originalParent.insertBefore(button, originalNextSibling); // Re-insert in original position
-                            Object.assign(button.style, originalStyles); // Restore all original inline styles
-                            
+                            originalParent.insertBefore(button, originalNextSibling);
+                            Object.assign(button.style, originalStyles);
                             button.textContent = originalText;
-                            
                             button.removeEventListener('click', clickHandler);
                             button.onclick = originalOnclick;
                             delete button.dataset.isGlitched;
@@ -478,7 +528,7 @@
                     if (step >= 60) {
                         currentPos = targetPos;
                         const targetEl = targetPos.element;
-                        if (Math.random() < 0.2 && targetEl.innerText) {
+                        if (Math.random() < 0.5 && targetEl.innerText) {
                             setTimeout(() => {
                                 const range = document.createRange(), selection = window.getSelection();
                                 try {
@@ -656,7 +706,6 @@
             el.addEventListener('input', handleTypingGlitch);
         });
 
-        // --- Apply initial button glitch to 50% of buttons ---
         console.log('[GlitchArt] Searching for buttons to apply the initial teleport glitch...');
         const allButtons = Array.from(document.querySelectorAll('button, a.button, [role="button"]'));
         if (allButtons.length > 0) {
