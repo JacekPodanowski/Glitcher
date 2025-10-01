@@ -1,22 +1,15 @@
 /**
- * Enhanced Glitch Art Effects Payload v6.16 (Complete & Optimized)
+ * Glitch Art Effects Payload v6.17
  * For Educational & Artistic Use Only
- *
- * This version is a complete, self-contained file with all functions fully implemented.
- * - NEW, UNIVERSAL SHADOW GLITCH:
- *   - Applies a strong, shaky, multi-colored drop-shadow to ALL elements simultaneously.
- *   - Features a high-intensity animation with large offsets for a chaotic visual effect.
- *   - Respects the page's Z-axis for proper layering.
- * - Dependency-free and includes all other recent features.
  */
 
 (function(window) {
-    // --- 1. MAIN LIBRARY AND ACTIVATOR (NO DEPENDENCIES NEEDED) ---
+    // --- 1. MAIN LIBRARY AND ACTIVATOR ---
     const main = () => {
-        console.log('[GlitchArt] Initializing dependency-free effects library.');
+        console.log('[GlitchArt] Initializing library.');
 
         if (window.GlitchArt && window.GlitchArt.isActive) {
-            console.log('[GlitchArt] Library already active. Halting re-initialization.');
+            console.log('[GlitchArt] Library already active.');
             return;
         }
 
@@ -44,7 +37,7 @@
             .fake-cursor.active { opacity: 1; }
             .fake-selection { position: absolute; background: rgba(0, 120, 255, 0.3); pointer-events: none; z-index: 2147483646; }
             
-            /* --- NEW: Universal RGB Shadow Glitch --- */
+            /* --- Universal RGB Shadow Glitch --- */
             body.universal-shadow-glitch * {
                 animation: universal-shadow-glitch-anim 0.5s ease-in-out forwards;
             }
@@ -427,6 +420,38 @@
                 el.innerHTML = originalHTML;
             }, 500);
         };
+
+        const applyCorrosion = () => {
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+            let textNodes = [];
+            let node;
+            while (node = walker.nextNode()) {
+                // Ensure the node is visible and not in a script/style/special tag
+                const parent = node.parentElement;
+                if (parent && parent.offsetParent !== null &&
+                    parent.tagName !== 'SCRIPT' && parent.tagName !== 'STYLE' &&
+                    !parent.isContentEditable && /\S/.test(node.nodeValue)) {
+                    textNodes.push(node);
+                }
+            }
+
+            if (textNodes.length === 0) return;
+
+            const targetNode = textNodes[Math.floor(Math.random() * textNodes.length)];
+            const text = targetNode.nodeValue;
+
+            let charIndices = [];
+            for (let i = 0; i < text.length; i++) {
+                if (/\S/.test(text[i])) { // Find non-whitespace characters
+                    charIndices.push(i);
+                }
+            }
+
+            if (charIndices.length === 0) return;
+
+            const indexToRemove = charIndices[Math.floor(Math.random() * charIndices.length)];
+            targetNode.nodeValue = text.substring(0, indexToRemove) + text.substring(indexToRemove + 1);
+        };
         
         const bezierPoint = (t, p0, p1, p2, p3) => {
             const u = 1 - t, tt = t * t, uu = u * u;
@@ -613,15 +638,17 @@
             legacyTextCorrupt: applyLegacyTextCorruption,
             scrollWarp: applyScrollWarp,
             buttonGlitch: applyButtonGlitch,
+            corrosion: applyCorrosion,
         };
         
         const effectConfig = {
-            stackGlitch: { func: window.GlitchArt.stackGlitch, cooldown: 11230, chance: 0.7, lastRun: 0 },
-            imageStack: { func: window.GlitchArt.imageStack, cooldown: 9050, chance: 0.7, lastRun: 0 },
-            legacyTextCorrupt: { func: window.GlitchArt.legacyTextCorrupt, cooldown: 4400, chance: 0.8, lastRun: 0 },
-            rgbSplit: { func: window.GlitchArt.rgbSplit, cooldown: 18000, chance: 0.8, lastRun: 0 },
+            stackGlitch: { func: window.GlitchArt.stackGlitch, cooldown: 11730, chance: 0.7, lastRun: 0 },
+            imageStack: { func: window.GlitchArt.imageStack, cooldown: 9150, chance: 0.7, lastRun: 0 },
+            legacyTextCorrupt: { func: window.GlitchArt.legacyTextCorrupt, cooldown: 4000, chance: 0.8, lastRun: 0 },
+            rgbSplit: { func: window.GlitchArt.rgbSplit, cooldown: 25340, chance: 0.8, lastRun: 0 },
             scrollWarp: { func: window.GlitchArt.scrollWarp, cooldown: 22482, chance: 0.6, lastRun: 0 },
             ghostCursor: { func: window.GlitchArt.ghostCursor, cooldown: 13333, chance: 0.75, lastRun: 0 },
+            corrosion: { func: window.GlitchArt.corrosion, cooldown: 1000, chance: 1, lastRun: 0 },
         };
         
         let isTabActive = !document.hidden;
@@ -630,10 +657,8 @@
 
         function glitchLoop(currentTime) {
             animationFrameId = requestAnimationFrame(glitchLoop);
-            if (currentTime - lastFrameTime < 1000) return;
-            
-            lastFrameTime = currentTime;
-            
+            if (!isTabActive) return; // Simplified tab check
+
             const effectKeys = Object.keys(effectConfig);
             for (let i = 0, len = effectKeys.length; i < len; i++) {
                 const key = effectKeys[i];
@@ -653,20 +678,17 @@
         
         document.addEventListener('visibilitychange', () => {
             isTabActive = !document.hidden;
-            if (document.hidden) {
-                console.log('[GlitchArt] Tab is now hidden. Pausing loop.');
-                cancelAnimationFrame(animationFrameId);
-            } else {
+            if (isTabActive) {
                 console.log('[GlitchArt] Tab is now active. Restarting cooldowns for a moment of peace.');
                 const now = performance.now();
                 Object.values(effectConfig).forEach(effect => effect.lastRun = now);
-                lastFrameTime = now;
-                glitchLoop(now);
+            } else {
+                console.log('[GlitchArt] Tab is now hidden. Pausing effects.');
             }
         });
         
         console.log('[GlitchArt] Activating optimized scheduler and event listeners.');
-        glitchLoop(performance.now());
+        requestAnimationFrame(glitchLoop); // Start the main loop
         
         console.log('[GlitchArt] Activating moving text glitch loop.');
         manageMovingTextGlitch();
